@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.css" />
+    <None Remove="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.js" />
+    <None Remove="LINQPad\Controls\_sys\Slider\jquery.min.js" />
+    <None Remove="LINQPad\Plotting\_sys\Themes\dark.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.css" />
+    <EmbeddedResource Include="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.js" />
+    <EmbeddedResource Include="LINQPad\Controls\_sys\Slider\jquery.min.js" />
+    <EmbeddedResource Include="LINQPad\Plotting\_sys\Themes\dark.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ClearScript" Version="7.4.5" />
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
+    <PackageReference Include="TALib.NETCore" Version="0.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Base\FeedUtils\FeedUtils.csproj" />
+  </ItemGroup>
+
+</Project>

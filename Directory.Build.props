@@ -1,0 +1,19 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>preview</LangVersion>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.0.1</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>vlad2048</Authors>
+    <Description>C# backtesting library. DataFrames, plotting, simulation, market data feeds with LINQPad integration</Description>
+    <PackageTags>trading,LINQPad,backtesting,plotting,C#</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

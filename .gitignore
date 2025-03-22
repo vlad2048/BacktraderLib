@@ -1,0 +1,13 @@
+# Visual Studio
+.vs/
+.idea/
+*.suo
+*.user
+[Bb]in/
+[Oo]bj/
+
+# Internal
+/_infos/
+/_projs/
+/_scripts/
+/reverse/

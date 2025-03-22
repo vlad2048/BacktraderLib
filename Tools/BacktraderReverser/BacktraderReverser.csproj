@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Backtrader.py" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Backtrader.py" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LINQPad.Runtime" Version="8.3.7" />
+  </ItemGroup>
+
+</Project>
