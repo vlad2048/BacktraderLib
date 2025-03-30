@@ -10,4 +10,10 @@ public static class FileUtils
 			Directory.CreateDirectory(e);
 		return e;
 	}
+
+	public static void EmptyFolder(string folder)
+	{
+		foreach (var file in Directory.GetFiles(folder)) File.Delete(file);
+		foreach (var subFolder in Directory.GetDirectories(folder)) Directory.Delete(subFolder, true);
+	}
 }

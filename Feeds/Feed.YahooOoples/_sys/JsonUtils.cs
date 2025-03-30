@@ -1,5 +1,6 @@
 ﻿using OoplesFinance.YahooFinanceAPI.Models;
 using System.Text.Json;
+using BaseUtils;
 using FeedUtils;
 
 namespace Feed.YahooOoples._sys;

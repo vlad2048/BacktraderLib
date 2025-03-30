@@ -30,8 +30,8 @@ static class JSCodeBuilder
 	static bool JSRepl_Obj_Once(ref string src, int i, string dst)
 	{
 		var marker = Marker(i);
-		var srcLines = src.SplitInLines();
-		var dstLines = dst.SplitInLines();
+		var srcLines = src.SplitLines();
+		var dstLines = dst.SplitLines();
 		
 		var srcLineIdx = srcLines.Index().FirstOrDefault(t => t.Item2.Contains(marker, StringComparison.Ordinal), (-1, string.Empty)).Item1;
 		if (srcLineIdx == -1) return false;
@@ -73,9 +73,6 @@ static class JSCodeBuilder
 		var res = str[..idx] + next + str[(idx + prev.Length)..];
 		return res;
 	}
-
-
-	static string[] SplitInLines(this string str) => str.Split(Environment.NewLine);
 
 
 	static string FmtArr<T>(this T[] xs, Func<T, string>? fmt = null) => $"[{string.Join(", ", xs.Select(x => x.FmtItem(fmt)))}]";

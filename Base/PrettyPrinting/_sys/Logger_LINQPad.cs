@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Text;
+using System.Web;
 using LINQPad;
 
 namespace PrettyPrinting._sys;
@@ -25,7 +26,11 @@ static class Logger_LINQPad
 			foreach (var x in arr.Array)
 			{
 				PropagateColors(x.Back, x.Fore);
-				sb.MkSpan(x with { Back = curBack, Fore = curFore });
+				sb.MkSpan(new Txt(
+					Text: HttpUtility.HtmlEncode(x.Text),
+					Back: curBack,
+					Fore: curFore
+				));
 			}
 		});
 

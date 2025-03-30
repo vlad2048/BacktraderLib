@@ -3,11 +3,11 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Feed.NoPrefs._sys.Utils;
+namespace BaseUtils;
 
-static partial class Cmd
+public static partial class Cmd
 {
-	public static void EnsureRunning(string exe, string curDir, string[] arguments) => RunBackground(exe, curDir, arguments);
+	public static void EnsureRunning(string exe, string curDir, string[] arguments, string? processName = null) => RunBackground(exe, curDir, arguments, processName);
 
 
 	sealed class RunningProc(Process proc)
@@ -15,11 +15,10 @@ static partial class Cmd
 		public Process Proc { get; } = proc;
 	}
 
-	static RunningProc RunBackground(string exe, string curDir, string[] arguments) => Find(exe, curDir, arguments) ?? Run(exe, curDir, arguments);
+	static RunningProc RunBackground(string exe, string curDir, string[] arguments, string? processName) => Find(exe, curDir, arguments, processName) ?? Run(exe, curDir, arguments);
 
 	static RunningProc Run(string exe, string curDir, string[] arguments)
 	{
-		var (sbOut, sbErr) = (new StringBuilder(), new StringBuilder());
 		var proc = new Process
 		{
 			StartInfo = new ProcessStartInfo(exe, arguments)
@@ -31,27 +30,9 @@ static partial class Cmd
 				RedirectStandardError = true,
 			}
 		};
-		proc.EnableRaisingEvents = true;
-		proc.OutputDataReceived += (_, args) => sbOut.Append(args.Data);
-		proc.ErrorDataReceived += (_, args) => sbErr.Append(args.Data);
-		proc.Exited += (_, _) =>
-		{
-			throw new ArgumentException(
-				$"""
-				 Process finished unexpectedly
-				     Exe   : {exe}
-				     CurDir: {curDir}
-				     Args  : {string.Join(" ", arguments)}
-				 
-				 StdOut
-				 ------
-				 {sbOut}
-				 
-				 StdErr
-				 ------
-				 {sbErr}
-				 """);
-		};
+
+		var runningProc = CreateRunningProc(proc, exe, curDir, arguments);
+
 		proc.Start();
 
 		var actCmdLine = proc.GetCmdLine();
@@ -61,30 +42,75 @@ static partial class Cmd
 
 		if (actCmdLine != expCmdLine)
 			throw new ArgumentException($"Cmd.EnsureRunning mismatched CmdLine. Act:'{actCmdLine}  Exp:{expCmdLine}'");
-		if (actCurDir != expCurDir)
+		if (actCurDir == null || !actCurDir.StartsWith(expCurDir))
 			throw new ArgumentException($"Cmd.EnsureRunning mismatched CurDir. Act:'{actCurDir}  Exp:{expCurDir}'");
 
-		return new RunningProc(proc);
+		return runningProc;
 	}
 
-	static RunningProc? Find(string exe, string curDir, string[] arguments)
+
+
+
+	static RunningProc? Find(string exe, string curDir, string[] arguments, string? processName)
 	{
 		var expCurDir = curDir.NormalizeCurDir();
 		var expCmdLine = $"\"{exe}\" {string.Join(" ", arguments)}";
-		var proc = Process.GetProcessesByName(exe)
+		var procs = Process.GetProcessesByName(processName ?? exe)
 			.Where(e =>
 			{
 				var actCmdLine = e.GetCmdLine();
 				var actCurDir = e.GetCurDir();
-				return actCmdLine == expCmdLine && actCurDir == expCurDir;
+				return actCmdLine == expCmdLine && actCurDir != null && actCurDir.StartsWith(expCurDir);
 			})
 			.ToArray();
-		return proc.Length switch
-		{
-			>= 1 => new RunningProc(proc[0]),
-			_ => null,
-		};
+
+		if (procs.Length == 0)
+			return null;
+
+		var proc = procs[0];
+
+
+		return CreateRunningProc(proc, exe, curDir, arguments);
 	}
+
+
+
+
+	static readonly HashSet<string> connectedExes = new();
+
+
+	static RunningProc CreateRunningProc(Process proc, string exe, string curDir, string[] arguments)
+	{
+		if (connectedExes.Add(exe))
+		{
+			var (sbOut, sbErr) = (new StringBuilder(), new StringBuilder());
+			proc.EnableRaisingEvents = true;
+			proc.OutputDataReceived += (_, args) => sbOut.Append(args.Data);
+			proc.ErrorDataReceived += (_, args) => sbErr.Append(args.Data);
+			proc.Exited += (_, _) =>
+			{
+				throw new ArgumentException(
+					$"""
+					 Process finished unexpectedly
+					     Exe   : {exe}
+					     CurDir: {curDir}
+					     Args  : {string.Join(" ", arguments)}
+
+					 StdOut
+					 ------
+					 {sbOut}
+
+					 StdErr
+					 ------
+					 {sbErr}
+					 """);
+			};
+		}
+		return new RunningProc(proc);
+	}
+
+
+
 
 	static string NormalizeCurDir(this string s) => s.EndsWith('\\') switch
 	{

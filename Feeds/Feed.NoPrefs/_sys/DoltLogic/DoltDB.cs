@@ -1,4 +1,5 @@
-﻿using Feed.NoPrefs._sys.DoltLogic.Structs;
+﻿using BaseUtils;
+using Feed.NoPrefs._sys.DoltLogic.Structs;
 using Feed.NoPrefs._sys.Utils;
 using MySqlConnector;
 

@@ -11,16 +11,17 @@ static class CtrlsInit
 		Util.HtmlHead.AddStyles("""
 		.widget-horz {
 			display: flex;
-			column-gap: 20px;
+			column-gap: 5px;
+			align-items: baseline;
 		}
 		.widget-vert {
 			display: flex;
 			flex-direction: column;
-			row-gap: 20px;
 		}
 		
 		.widget {
 			display: flex;
+			align-items: baseline;
 		}
 		.widget > label {
 			width: 100px;

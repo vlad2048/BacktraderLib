@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ClearScript" Version="7.4.5" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.3" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
     <PackageReference Include="TALib.NETCore" Version="0.5.0" />
   </ItemGroup>

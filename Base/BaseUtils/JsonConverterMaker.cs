@@ -1,7 +1,7 @@
-﻿using System.Text.Json.Serialization;
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace FeedUtils;
+namespace BaseUtils;
 
 public static class JsonConverterMaker
 {

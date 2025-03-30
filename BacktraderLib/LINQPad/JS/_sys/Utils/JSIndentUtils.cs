@@ -1,4 +1,6 @@
-﻿namespace BacktraderLib._sys.Utils;
+﻿using BaseUtils;
+
+namespace BacktraderLib._sys.Utils;
 
 static class JSIndentUtils
 {
@@ -6,7 +8,7 @@ static class JSIndentUtils
 	{
 		var pad = new string('\t', n);
 		return str
-			.SplitInLines()
+			.SplitLines()
 			.Select((e, i) => i switch
 			{
 				0 => e,
@@ -19,10 +21,10 @@ static class JSIndentUtils
 	{
 		var pad = new string('\t', n);
 		return str
-			.SplitInLines()
+			.SplitLines()
 			.Select(e => pad + e)
 			.JoinLines();
 	}
 
-	static string[] SplitInLines(this string? str) => str == null ? Array.Empty<string>() : str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+	static string[] SplitLines(this string? str) => str == null ? Array.Empty<string>() : str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 }

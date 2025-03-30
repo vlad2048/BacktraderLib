@@ -1,11 +1,7 @@
-﻿using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using BacktraderLib._sys;
 using BacktraderLib._sys.Utils;
 using LINQPad;
-using LINQPad.Controls;
-using LINQPad.Controls.Core;
 
 namespace BacktraderLib;
 
@@ -14,12 +10,13 @@ public class Tag(string tagName, string? text = null)
 	public string? Id { get; init; }
 	public string? Class { get; init; }
 	public string[]? Style { get; init; }
+	public Dictionary<string, string> Attributes { get; init; } = [];
 
 	public string OnRenderJS
 	{
 		init
 		{
-			if (Id == null) throw new ArgumentException("Id needs to be set before using OnRenderJS");
+			Id ??= IdGen.Make();
 			JS.Run(
 				"""
 				(async () => {
@@ -38,7 +35,7 @@ public class Tag(string tagName, string? text = null)
 	{
 		init
 		{
-			if (Id == null) throw new ArgumentException("Id needs to be set before using OnRender");
+			Id ??= IdGen.Make();
 			var evtName = $"{Id}_OnRender";
 			Events.Listen(evtName, _ => value());
 			JS.Run(
@@ -55,11 +52,12 @@ public class Tag(string tagName, string? text = null)
 		}
 	}
 
-	public Action OnClick
+	public Action? OnClick
 	{
 		init
 		{
-			if (Id == null) throw new ArgumentException("Id needs to be set before using OnClick");
+			if (value == null) return;
+			Id ??= IdGen.Make();
 			var evtName = $"{Id}_OnClick";
 			Events.ListenFast(evtName, value);
 			JS.Run(
@@ -98,6 +96,9 @@ public class Tag(string tagName, string? text = null)
 			sb.Append($" class='{Class}'");
 		if (Style != null)
 			sb.Append($" style='{string.Join(';', Style)}'");
+		if (Attributes != null)
+			foreach (var (key, val) in Attributes)
+				sb.Append($" {key}='{val}'");
 		sb.Append(">");
 
 		foreach (var kid in Kids)
@@ -108,62 +109,5 @@ public class Tag(string tagName, string? text = null)
 
 		sb.Append($"</{tagName}>");
 		return sb.ToString();
-	}
-}
-
-
-
-
-public static class TagExt
-{
-	public static Tag ToTag(this DumpContainer dc) => ToTagInner(dc.WrapInDiv());
-	public static Tag ToTag(this Control ctrl) => ToTagInner(ctrl);
-
-
-	
-	static Tag ToTagInner(Control kid)
-	{
-		var (idDad, idKid) = (IdGen.Make(), IdGen.Make());
-		kid.HtmlElement.ID = idKid;
-
-		var dad = new Tag("div")
-		{
-			Id = idDad,
-			OnRender = () =>
-			{
-				kid.Dump();
-			},
-		};
-
-
-		JS.Run(
-			"""
-
-			(async () => {
-				const [eltDad, eltKid] = await Promise.all([
-					window.waitForElement(____0____),
-					window.waitForElement(____1____),
-				]);
-				eltDad.appendChild(eltKid);
-			})();
-			""",
-			e => e
-				.JSRepl_Val(0, idDad)
-				.JSRepl_Val(1, idKid)
-		);
-
-
-		return dad;
-	}
-
-
-
-	static readonly FieldInfo HtmlElement_DumpContainer_Field = typeof(HtmlElement).GetField("DumpContainer", BindingFlags.NonPublic | BindingFlags.Instance)!;
-
-	static Div WrapInDiv(this DumpContainer dc)
-	{
-		var div = new Div();
-		HtmlElement_DumpContainer_Field.SetValue(div.HtmlElement, dc);
-		return div;
 	}
 }

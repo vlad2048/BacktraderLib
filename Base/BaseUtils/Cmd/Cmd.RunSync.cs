@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 
-namespace Feed.NoPrefs._sys.Utils;
+namespace BaseUtils;
 
 
-sealed record ProcRes(string Exe, string CurDir, string[] arguments, string StdOut, string StdErr, int ExitCode)
+public sealed record ProcRes(string Exe, string CurDir, string[] arguments, string StdOut, string StdErr, int ExitCode)
 {
 	public bool IsSuccess => ExitCode == 0;
 }
 
-static class ProcResExt
+public static class ProcResExt
 {
 	public static ProcRes EnsureSuccess(this ProcRes res)
 	{
@@ -60,7 +60,7 @@ static class ProcResExt
 
 
 
-static partial class Cmd
+public static partial class Cmd
 {
 	public static ProcRes RunSync(string exe, string curDir, string[] arguments, bool showInConsole = false)
 	{

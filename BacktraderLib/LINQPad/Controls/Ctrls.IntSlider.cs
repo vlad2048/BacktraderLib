@@ -12,30 +12,35 @@ public static partial class Ctrls
 		int max
 	)
 	{
-		var rx = Var.Make(init);
+		var Δrx = Var.Make(init);
 		var ui = Slider.Single(
 			min,
 			max,
 			1,
 			init,
 			CtrlsClasses.WidgetMain,
-			e => rx.V = e
+			e => Δrx.V = e
 		);
-		return (rx, ui.WithLabel(name));
+		return (Δrx, ui.WithLabel(name));
 	}
 
 
-	static Tag WithLabel(this Tag tag, string name) =>
-		new("div")
+	static Tag WithLabel(this Tag tag, string? name) =>
+		name switch
 		{
-			Class = CtrlsClasses.Widget,
-			Kids =
-			[
-				new Tag("label", name),
-				tag,
-			],
+			not null =>
+				new("div")
+				{
+					Class = CtrlsClasses.Widget,
+					Kids =
+					[
+						new Tag("label", name),
+						tag,
+					],
+				},
+			null => tag,
 		};
-	
+
 
 
 
