@@ -26,20 +26,6 @@ static class JsonUtils
 		File.WriteAllText(file, Ser(obj));
 		return obj;
 	}
-	/*public static T Save<T>(this T obj, string file)
-	{
-		try
-		{
-			File.WriteAllText(file, Ser(obj));
-		}
-		catch (DirectoryNotFoundException)
-		{
-			Thread.Sleep(10);
-			File.WriteAllText(file, Ser(obj));
-		}
-		return obj;
-	}*/
-
 	public static string Ser<T>(T obj) => JsonSerializer.Serialize(obj, jsonOpt);
 	public static T Deser<T>(string str) => JsonSerializer.Deserialize<T>(str, jsonOpt)!;
 }

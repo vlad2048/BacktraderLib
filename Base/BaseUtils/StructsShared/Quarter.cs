@@ -82,18 +82,18 @@ public sealed record Quarter(int Year, QNum Q) : IComparable<Quarter>
 	public static bool CanParseSubRowQuarter(string fy, string fp) =>
 		int.TryParse(fy, out _) &&
 		fp is "Q1" or "Q2" or "Q3" or "FY";
-	public static Quarter ParseSubRowQuarter(int fy, string fp)
-	{
-		var (year, quarter) = fp switch
+
+	public static Quarter ParseSubRowQuarter(int fy, string fp) => new(
+		fy,
+		fp switch
 		{
-			"Q1" => (fy, 0),
-			"Q2" => (fy, 1),
-			"Q3" => (fy, 2),
-			"FY" => (fy + 1, 3),
+			"Q1" => QNum.Q1,
+			"Q2" => QNum.Q2,
+			"Q3" => QNum.Q3,
+			"FY" => QNum.Q4,
 			_ => throw new ArgumentException("This should be impossible"),
-		};
-		return new Quarter(year, (QNum)quarter);
-	}
+		}
+	);
 
 	// Q3'17
 	public static Quarter ParseScrapeQuarter(string str)
@@ -101,7 +101,14 @@ public sealed record Quarter(int Year, QNum Q) : IComparable<Quarter>
 		var match = Regex.Match(str, @"Q([1-4])'(\d{2})");
 		if (!match.Success) throw new ArgumentException($"Failed to extract Quarter from '{str}'");
 		var quarterNumber = int.Parse(match.Groups[1].Value);
-		var year = int.Parse(match.Groups[2].Value) + 2000;
+		var yearShort = int.Parse(match.Groups[2].Value);
+
+		var year = yearShort switch
+		{
+			>= 50 => yearShort + 1900,
+			_ => yearShort + 2000,
+		};
+
 		return new Quarter(year, (QNum)(quarterNumber - 1));
 	}
 
@@ -115,6 +122,19 @@ public sealed record Quarter(int Year, QNum Q) : IComparable<Quarter>
 		for (var q = MinValue; q <= MaxValue; q++)
 			list.Add(q);
 		return [.. list];
+	}
+}
+
+
+
+
+public static class QuarterUtils
+{
+	public static int Distance(this Quarter qA, Quarter qB)
+	{
+		var vA = qA.Year * 4 + (int)qA.Q;
+		var vB = qB.Year * 4 + (int)qB.Q;
+		return Math.Abs(vA - vB);
 	}
 }
 

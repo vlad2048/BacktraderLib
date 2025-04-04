@@ -1,4 +1,16 @@
-﻿# Process
+﻿# Links
+```
+XBRL Rules
+----------
+https://xbrl.us/data-rule/dqc_0004/
+```
+
+
+
+
+<br><br><br><br><br>
+
+# Process
 
 ```ps1
 

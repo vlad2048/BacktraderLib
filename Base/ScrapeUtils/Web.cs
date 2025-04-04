@@ -9,6 +9,8 @@ public static class Web
 	internal static void Init() => browserCtx?.DisposeAsync();
 
 
+	public static ITracing Tracing => (browserCtx ?? throw new ArgumentException("Call Web.Open() first")).Tracing;
+
 	public static async Task<IPage> Open(string url)
 	{
 		var playwright = await Playwright.CreateAsync();
@@ -19,6 +21,10 @@ public static class Web
 				Headless = false,
 			}
 		);
+
+		browserCtx.SetDefaultTimeout(3000);
+		browserCtx.SetDefaultNavigationTimeout(30000);
+
 		IPage page;
 		if (browserCtx.Pages.Count > 0)
 			page = browserCtx.Pages[0];

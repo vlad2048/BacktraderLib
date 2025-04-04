@@ -1,5 +1,5 @@
 ﻿using Microsoft.Playwright;
 
-namespace Feed.SEC._sys.Scraping.Structs;
+namespace Feed.Trading212._sys.Structs;
 
 sealed record LocItem<T>(T Item, ILocator Loc);

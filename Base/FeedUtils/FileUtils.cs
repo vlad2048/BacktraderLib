@@ -1,4 +1,6 @@
-﻿namespace FeedUtils;
+﻿using BaseUtils;
+
+namespace FeedUtils;
 
 public static class FileUtils
 {
@@ -16,4 +18,19 @@ public static class FileUtils
 		foreach (var file in Directory.GetFiles(folder)) File.Delete(file);
 		foreach (var subFolder in Directory.GetDirectories(folder)) Directory.Delete(subFolder, true);
 	}
+
+	// While the '.' is valid in filenames and folder names,
+	// it is NOT possible to use it at the end of filenames and folder names
+	public static string ToFileSafe(this string e) => e
+		.Replace('/', '+')
+		.Replace('\\', '=')
+		.Replace(':', '@')
+		.Replace('.', '~');
+	public static string FromFileSafe(this string e) => e
+		.Replace('+', '/')
+		.Replace('=', '\\')
+		.Replace('@', ':')
+		.Replace('~', '.');
+
+	public static string[] FromAllFilesSafe(this string[] files) => files.SelectA(e => (Path.GetFileNameWithoutExtension(e) ?? throw new ArgumentException("Oh no")).FromFileSafe());
 }

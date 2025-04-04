@@ -32,7 +32,7 @@ static class Consts
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "1_download").CreateFolderIFN();
 		public static readonly string LastCheckFile = Path.Combine(Folder, "_last-check.json");
-		public static string[] GetAllQuarters() => Directory.GetFiles(Folder, "*.zip").SelectA_GetFileNameWithoutExtension();
+		public static string[] GetAllQuarters() => Directory.GetFiles(Folder, "*.zip").FromAllFilesSafe();
 		public static string QuarterZipFile(string quarter) => Path.Combine(Folder, $"{quarter}.zip");
 		public static string[] GetAllZipFiles() => GetAllQuarters().SelectA(QuarterZipFile);
 		public static readonly TimeSpan CheckDelay = TimeSpan.FromDays(7);
@@ -42,7 +42,7 @@ static class Consts
 	public static class Clean
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "2_clean").CreateFolderIFN();
-		public static string[] GetAllQuarters() => Directory.GetFiles(Folder, "*.zip").SelectA_GetFileNameWithoutExtension();
+		public static string[] GetAllQuarters() => Directory.GetFiles(Folder, "*.zip").FromAllFilesSafe();
 		public static string QuarterZipFile(string quarter) => Path.Combine(Folder, $"{quarter}.zip");
 		public static string[] GetAllZipFiles() => GetAllQuarters().SelectA(QuarterZipFile);
 	}
@@ -52,8 +52,8 @@ static class Consts
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "3_group").CreateFolderIFN();
 		public static readonly string QuartersDoneFile = Path.Combine(Folder, "_quarters-done.json");
-		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.zip").SelectA_GetFileNameWithoutExtension().SelectA(e => e.FromSafe());
-		public static string CompanyZipFile(string company) => Path.Combine(Folder, $"{company.ToSafe()}.zip");
+		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.zip").FromAllFilesSafe();
+		public static string CompanyZipFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.zip");
 		public static string[] GetAllCompanyZipFiles() => GetAllCompanies().SelectA(CompanyZipFile);
 
 		// 1		45s
@@ -67,8 +67,8 @@ static class Consts
 	public static class Rename
 	{
 		public static readonly string Folder = Path.Combine(RootFolder, "4_rename").CreateFolderIFN();
-		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.zip").SelectA_GetFileNameWithoutExtension().SelectA(e => e.FromSafe());
-		public static string CompanyZipFile(string company) => Path.Combine(Folder, $"{company.ToSafe()}.zip");
+		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.zip").FromAllFilesSafe();
+		public static string CompanyZipFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.zip");
 		public static string[] GetAllCompanyZipFiles() => GetAllCompanies().SelectA(CompanyZipFile);
 	}
 
@@ -76,8 +76,8 @@ static class Consts
 	public static class ReferenceData
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "reference-data").CreateFolderIFN();
-		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.json").SelectA_GetFileNameWithoutExtension().SelectA(e => e.FromSafe());
-		public static string CompanyJsonFile(string company) => Path.Combine(Folder, $"{company.ToSafe()}.json");
+		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.json").FromAllFilesSafe();
+		public static string CompanyJsonFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.json");
 		public static string[] GetAllCompanyJsonFiles() => GetAllCompanies().SelectA(CompanyJsonFile);
 	}
 
@@ -85,41 +85,18 @@ static class Consts
 	public static class Pdfs
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "pdfs").CreateFolderIFN();
-		public static string File(string company, string adsh) => Path.Combine(Path.Combine(Folder, company.ToSafe()).CreateFolderIFN(), $"{adsh}.pdf");
+		public static string File(string company, string adsh) => Path.Combine(Path.Combine(Folder, company.ToFileSafe()).CreateFolderIFN(), $"{adsh}.pdf");
 	}
 
 
 
 	public static class DumpCaps
 	{
-		//public const int Tag = 32;
-		public const int Tag = int.MaxValue;
+		public const int Tag = 32;
+		//public const int Tag = int.MaxValue;
 		public const int Tag_Tlabel = 16;
 		public const int Tag_Doc = 32;
 
 		public const int TagInNumPreXRef = 24;
 	}
-}
-
-
-
-file static class ConstsFileUtils
-{
-	// While the '.' is valid in filenames and folder names,
-	// it is NOT possible to use it at the end of filenames and folder names
-
-	public static string ToSafe(this string e) => e
-		.Replace('/', '+')
-		.Replace('\\', '=')
-		.Replace(':', '@')
-		.Replace('.', '~');
-
-	public static string FromSafe(this string e) => e
-		.Replace('+', '/')
-		.Replace('=', '\\')
-		.Replace('@', ':')
-		.Replace('~', '.');
-
-
-	public static string[] SelectA_GetFileNameWithoutExtension(this string[] xs) => xs.SelectA(e => Path.GetFileNameWithoutExtension(e)!);
 }

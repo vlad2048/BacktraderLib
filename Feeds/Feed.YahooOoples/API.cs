@@ -20,4 +20,8 @@ public static class API
 			e => e.Close,
 			e => e.Volume
 		);
+
+
+	public static bool SaveTodaySnap() => SnapTaker.SaveTodaySnap(client);
+	public static Snap LoadSnap(DateOnly? date = null) => SnapTaker.LoadSnap(client, date);
 }

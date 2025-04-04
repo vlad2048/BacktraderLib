@@ -26,19 +26,34 @@ public enum ScatterMode
 public sealed record ScatterTrace : ITrace
 {
 	public TraceType Type => TraceType.Scatter;
-
-	public bool? Visible { get; init; }
+	public ScatterMode? Mode { get; init; }
 
 	public FlexArray? X { get; init; }
 	public FlexArray? Y { get; init; }
 
+	public bool? Visible { get; init; }
 	public string? Name { get; init; }
 	public double? Opacity { get; init; }
-	public ScatterMode? Mode { get; init; }
-
 	public bool? Showlegend { get; init; }
-
 	public Marker? Marker { get; init; }
+}
+
+public sealed record BarTrace : ITrace
+{
+	public TraceType Type => TraceType.Bar;
+
+	public FlexArray? X { get; init; }
+	public FlexArray? Y { get; init; }
+	public int? Offset { get; init; }
+	public int[]? Width { get; init; }
+
+	public bool? Visible { get; init; }
+	public string? Name { get; init; }
+	public double? Opacity { get; init; }
+	public bool? Showlegend { get; init; }
+	public Marker? Marker { get; init; }
+
+	public string? Yaxis { get; init; }
 }
 
 public sealed record HeatmapTrace : ITrace
@@ -47,10 +62,8 @@ public sealed record HeatmapTrace : ITrace
 
 	public FlexArray? X { get; init; }
 	public FlexArray? Y { get; init; }
-	//public double[]? X { get; init; }
-	//public double[]? Y { get; init; }
-
 	public double[][]? Z { get; init; }
+
 	public string? Name { get; init; }
 	public double? Opacity { get; init; }
 }

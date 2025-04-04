@@ -64,7 +64,7 @@ static class PriceFetcher
 	{
 		try
 		{
-			var file = Consts.GetSymbolFile(symbol);
+			var file = Consts.Data.GetSymbolFile(symbol);
 			var tMax = DateTime.Now.SnapToMonth();
 			if (!File.Exists(file))
 			{
@@ -170,7 +170,7 @@ static class PriceFetcher
 	{
 		try
 		{
-			var file = Consts.GetSymbolFile(symbol);
+			var file = Consts.Data.GetSymbolFile(symbol);
 			var tMax = DateTime.Now.Date.Date;
 			if (!File.Exists(file))
 			{

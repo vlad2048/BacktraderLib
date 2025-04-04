@@ -19,5 +19,9 @@ public static class Prices
 	/// </summary>
 	/// <param name="prices">Prices to save</param>
 	/// <param name="folder">One file for each symbol will be writter in this folder</param>
-	public static void Save(this Frame<string, string, Bar> prices, string folder) => PriceSaver.Save(prices, folder);
+	public static Frame<string, string, Bar> Save(this Frame<string, string, Bar> prices, string folder)
+	{
+		PriceSaver.Save(prices, folder);
+		return prices;
+	}
 }

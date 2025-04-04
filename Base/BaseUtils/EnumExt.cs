@@ -23,7 +23,10 @@ public static class EnumExt
 	public static T[] ConcatDistinctA<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Concat(second).Distinct().ToArray();
 	public static U[] SelectDistinctA<T, U>(this IEnumerable<T> source, Func<T, U> fun) => source.Select(fun).Distinct().ToArray();
 	public static bool IsSame<T>(this T[] xs, T[] ys) => xs.Length == ys.Length && xs.Zip(ys).All(t => Equals(t.First, t.Second));
+
 	public static IReadOnlyDictionary<K, V> ToOrderedDictionary<T, K, V>(this IEnumerable<T> source, Func<T, K> keyFun, Func<T, V> valFun) => new OrderedDictionary<K, V>(source.Select(e => new KeyValuePair<K, V>(keyFun(e), valFun(e))));
+
+	public static SortedDictionary<K, V> ToSortedDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> source) where K : notnull => new(source.ToDictionary());
 
 	public static T[] Shuffle<T>(this IEnumerable<T> source, int? seed)
 	{
