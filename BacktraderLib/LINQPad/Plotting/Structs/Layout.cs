@@ -13,4 +13,6 @@ public sealed record Layout
 	public Legend? Legend { get; init; }
 	public Shape[]? Shapes { get; init; }
 	public Axis? Xaxis { get; init; }
+	public Axis? Yaxis { get; init; }
+	public Axis? Yaxis2 { get; init; }
 };

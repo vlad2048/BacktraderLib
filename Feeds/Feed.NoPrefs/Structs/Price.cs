@@ -1,4 +1,6 @@
-﻿namespace Feed.NoPrefs;
+﻿using BaseUtils;
+
+namespace Feed.NoPrefs;
 
 public sealed record Price(
 	string Symbol,
@@ -28,4 +30,26 @@ public sealed record PriceSplit(
 )
 {
 	public override string ToString() => $"[{ExDate:yyyy-MM-dd}] {ToFactor/ForFactor:F4}";
+}
+
+
+
+static class PriceUtils
+{
+	public static Price Merge(Price prev, Price next) => new(
+		prev.Symbol,
+		prev.Bars.Concat(next.Bars).ToArray(),
+		prev.Dividends.Concat(next.Dividends).ToArray(),
+		prev.Splits.Concat(next.Splits).ToArray()
+	);
+
+	public static Price SanityCheck(this Price price)
+	{
+		var n = price.Bars.Length;
+
+		var dates = price.Bars.SelectA(e => e.Date.Date).Distinct().ToArray();
+		if (dates.Length != n) throw new ArgumentException("Non unique dates");
+
+		return price;
+	}
 }

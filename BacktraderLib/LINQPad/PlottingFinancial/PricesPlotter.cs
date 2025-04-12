@@ -24,7 +24,7 @@ public static class PricesPlotter
 	static readonly Config defaultConfig = new();
 
 
-	public static Plot<ScatterTrace> Plot(this Frame<string, string, Bar> prices) =>
+	public static Plot Plot(this Frame<string, string, Bar> prices) =>
 		BacktraderLib.Plot.Make(
 			prices.SelectA(e => e[Bar.Close].ToTrace(e.Name)),
 			defaultLayout,

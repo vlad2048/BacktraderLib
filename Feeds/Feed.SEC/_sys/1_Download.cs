@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using BaseUtils;
+﻿using BaseUtils;
 using Feed.SEC._sys.Utils;
 using HtmlAgilityPack;
 
@@ -10,16 +9,22 @@ static class _1_Download
 	public static void Run()
 	{
 		var Log = Logger.Make(LogCategory._1_Download);
+		Log.Step(Step.Download);
+
 		if (!HasEnoughTimePassedToCheckAgain(Log))
+		{
+			Log("UP-TO-DATE");
 			return;
+		}
 
 		var htmlDoc = HttpUtils.GetHtmlPage(linkPageUrl, linkPageRequestData);
 		var quartersNext = FindZipLinksInHtml(htmlDoc);
 		var quartersPrev = Consts.Download.GetAllQuarters();
 		var quartersNew = quartersNext.ExceptA(quartersPrev, link2NameComparer);
 
-		quartersNew.Loop(Log, 1, "Download", x => Consts.Download.QuarterZipFile(x).FmtArchFile(), quarterNew =>
+		quartersNew.Loop(Log, (quarterNew, idx, cnt) =>
 		{
+			Log.Title($"[{idx}/{cnt}]    {Consts.Download.QuarterZipFile(Path.GetFileNameWithoutExtension(quarterNew)).FmtArchFile()}");
 			var bytes = HttpUtils.DownloadFile(quarterNew, zipLinkRequestData);
 			var quarter = Path.GetFileNameWithoutExtension(quarterNew);
 			var zipFile = Consts.Download.QuarterZipFile(quarter);

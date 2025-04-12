@@ -13,8 +13,19 @@ public enum AxisSide
 	Right,
 }
 
+[PlotlyEnum(EnumStyle.LowerCase)]
+public enum AxisType
+{
+	Linear,
+	Log,
+	Date,
+	Category,
+	Multicategory,
+}
+
 public sealed record Axis
 {
+	public AxisType? Type { get; init; }
 	public bool Autorange { get; init; }
 	public bool Fixedrange { get; init; }
 	public FlexArray? Range { get; init; }

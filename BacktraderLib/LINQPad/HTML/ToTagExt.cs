@@ -3,6 +3,7 @@ using LINQPad.Controls.Core;
 using LINQPad.Controls;
 using LINQPad;
 using System.Reflection;
+using RxLib;
 
 namespace BacktraderLib;
 

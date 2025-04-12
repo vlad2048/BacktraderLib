@@ -1,28 +1,29 @@
 ﻿using BaseUtils;
+using RxLib;
 
 namespace BacktraderLib._sys;
 
-sealed class TraceLayoutKeeper<T> where T : ITrace, new()
+sealed class TraceLayoutKeeper
 {
-	readonly List<T> currentTrace;
+	readonly List<ITrace> currentTrace;
 	Layout currentLayout;
 
-	readonly Action<(int, T)[], Layout> update;
+	readonly Action<(int, ITrace)[], Layout> update;
 	readonly IRoVar<bool> isRendered;
 
 
 	public TraceLayoutKeeper(
-		T[] currentTrace,
+		ITrace[] currentTrace,
 		Layout currentLayout,
 		IRoVar<bool> isRendered,
-		Action<(int, T)[], Layout> update
+		Action<(int, ITrace)[], Layout> update
 	)
 	{
 		(this.currentTrace, this.currentLayout, this.isRendered, this.update) = (currentTrace.ToList(), currentLayout, isRendered, update);
 		isRendered.Where(e => e).Subscribe(_ => OnRendered()).D(D);
 	}
 
-	public void OnUpdate((int, T)[] updatesTrace, Layout updateLayout)
+	public void OnUpdate((int, ITrace)[] updatesTrace, Layout updateLayout)
 	{
 		CreateMissingTraces(currentTrace, updatesTrace);
 		if (!isRendered.V)
@@ -44,7 +45,7 @@ sealed class TraceLayoutKeeper<T> where T : ITrace, new()
 	// Step 1
 	// ======
 	// Return and clear the current state of the traces to call Plotly.NewPlot
-	public (T[], Layout) OnDump()
+	public (ITrace[], Layout) OnDump()
 	{
 		var resTrace = GetAndEmpty_Trace(currentTrace);
 		var resLayout = GetAndEmpty_Layout(ref currentLayout);
@@ -69,17 +70,17 @@ sealed class TraceLayoutKeeper<T> where T : ITrace, new()
 	}
 
 
-	static void CreateMissingTraces(List<T> cur, (int, T)[] upd)
+	static void CreateMissingTraces(List<ITrace> cur, (int, ITrace)[] upd)
 	{
 		if (upd.Length == 0) return;
 		var lngCur = cur.Count;
 		var lngUpd = upd.Max(e => e.Item1) + 1;
 		var add = Math.Max(0, lngUpd - lngCur);
-		for (var i = 0; i < add; i++)
-			cur.Add(new T());
+		if (add > 0)
+			throw new ArgumentException("Cannot update non existing traces");
 	}
 
-	static void Merge_Trace(List<T> cur, (int, T)[] upd)
+	static void Merge_Trace(List<ITrace> cur, (int, ITrace)[] upd)
 	{
 		foreach (var (idx, tr) in upd)
 			cur[idx] = ObjectMerger.Merge(cur[idx], tr);
@@ -88,11 +89,11 @@ sealed class TraceLayoutKeeper<T> where T : ITrace, new()
 	static void Merge_Layout(ref Layout cur, Layout upd) => cur = ObjectMerger.Merge(cur, upd);
 
 
-	static T[] GetAndEmpty_Trace(List<T> cur)
+	static ITrace[] GetAndEmpty_Trace(List<ITrace> cur)
 	{
 		var res = cur.ToArray();
-		for (var i = 0; i < cur.Count; i++)
-			cur[i] = new T();
+		//for (var i = 0; i < cur.Count; i++)
+		//	cur[i] = new ScatterTrace(); // TODO: is this right?
 		return res;
 	}
 

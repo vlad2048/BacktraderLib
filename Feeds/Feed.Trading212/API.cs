@@ -7,9 +7,11 @@ public static class API
 {
 	public static async Task Scrape(SymbolDef[] symbols) => await ScraperRunner.Scrape(symbols);
 
+	public static string[] GetAllCompanies() => Consts.Data.GetAllCompanies();
+
 	public static SymbolData Load(string secCompany) => JsonUtils.Load<SymbolData>(Consts.Data.CompanyJsonFile(secCompany));
 
-
+	
 	/*public static async Task EnableScript()
 	{
 		await InitPageIFN();

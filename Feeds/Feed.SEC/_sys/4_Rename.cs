@@ -1,56 +1,56 @@
-﻿using BaseUtils;
-using Feed.SEC._sys.Rows;
-using Feed.SEC._sys.Rows.Utils;
+﻿using Feed.SEC._sys.Rows;
 using Feed.SEC._sys.Utils;
-using FeedUtils;
 
 namespace Feed.SEC._sys;
 
-static class _4_Rename
+static class _4_NameChangeCompiler
 {
 	public static void Run()
 	{
 		var Log = Logger.Make(LogCategory._4_Rename);
+		Log.Step(Step.Rename);
 
-		FileUtils.EmptyFolder(Consts.Rename.Folder);
-
-		var subs = APIDev.Load_Clean_Rows<SubRow>().ToArray();
-		var names = subs.ToHashSet(e => e.Name);
-		var chgs = subs.GetChgs(names);
-		var groups = chgs.FindGroups(names);
-
-		var companies = Consts.Group.GetAllCompanies().ToHashSet();
-
-		var usageMap = subs.CountBy(e => e.Name).ToDictionary(e => e.Key, e => e.Value);
-
-		groups.Loop(Log, 3, "Rename", x => $"size:{x.Keys.Count}", group =>
+		var timePrev = new FileInfo(Consts.Group.QuartersDoneFile).LastWriteTime;
+		var timeNext = File.Exists(Consts.Rename.DataFile) switch
 		{
-			if (group.Keys.Count == 1)
-			{
-				var currentName = group.Keys.First();
-				File.Copy(Consts.Group.CompanyZipFile(currentName), Consts.Rename.CompanyZipFile(currentName));
-			}
-			else
-			{
-				var rowSet = group.Keys
-					.Where(companies.Contains)
-					.Select(e => RowReader.ReadRowSet(Consts.Group.CompanyZipFile(e)))
-					.Merge();
-				var currentName = (group.Changes.Length == 0) switch
-				{
-					true => group.Keys.Single(),
-					false => GetCurrentName(group.Changes, usageMap),
-				};
+			false => DateTime.MinValue,
+			true => new FileInfo(Consts.Rename.DataFile).LastWriteTime,
+		};
+		Log($"timePrev: {timePrev}");
+		Log($"timeNext: {timeNext}");
+		if (timeNext >= timePrev)
+		{
+			Log("timeNext >= timePrev => We are up-to-date");
+			Log("UP-TO-DATE");
+			return;
+		}
+		Log("timeNext < timePrev => Updating...");
 
-				RowReader.MergeRowSet(Consts.Rename.CompanyZipFile(currentName), rowSet);
-			}
-		});
+		var subRows = APIDev.Load_All_Group_Rows<SubRow>().ToArray();
+		var lastFiledDates = subRows
+			.GroupBy(e => e.Name)
+			.ToDictionary(
+				e => e.Key,
+				e => e.OrderByDescending(f => f.Filed).First().Filed
+			);
+		var changes = subRows
+			.Where(e => e.Former != null && e.Changed != null && e.Former != e.Name)
+			.Select(e => new NameChangeNfo(
+				e.Name,
+				e.Former!,
+				e.Changed!.Value
+			))
+			.Distinct()
+			.ToArray();
+		var changeInfos = new NameChangeInfos(lastFiledDates, changes);
+
+		changeInfos.Save(Consts.Rename.DataFile);
 
 		Log("Done");
 	}
 
 
-	sealed record Chg(string Name, string Former, DateOnly Changed);
+	/*sealed record Chg(string Name, string Former, DateOnly Changed);
 
 	static Chg[] GetChgs(this SubRow[] subs, HashSet<string> names) =>
 		subs
@@ -125,5 +125,5 @@ static class _4_Rename
 			if (groups[i].Keys.Contains(name))
 				return i;
 		throw new ArgumentException("Impossible. Could not find group");
-	}
+	}*/
 }

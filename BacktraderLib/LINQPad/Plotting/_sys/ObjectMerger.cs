@@ -8,10 +8,12 @@ static class ObjectMerger
 	{
 		if (objA == null) throw new ArgumentNullException(nameof(objA));
 		if (objB == null) throw new ArgumentNullException(nameof(objB));
+		if (objA.GetType() != objB.GetType()) throw new ArgumentException("Mismatched trace types");
+		var type = objA.GetType();
 
-		var result = Activator.CreateInstance<T>();
+		var result = Activator.CreateInstance(type);
 
-		foreach (var property in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+		foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
 		{
 			if (property.GetSetMethod() != null)
 			{
@@ -21,9 +23,8 @@ static class ObjectMerger
 			}
 		}
 
-		return result;
+		return (T)result!;
 	}
-
 
 	public static T MergeOpt<T>(T objA, T? objB) where T : class
 	{

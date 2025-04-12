@@ -64,13 +64,15 @@ static class Consts
 		public const int ParallelismLevel = 4;
 	}
 
+
 	public static class Rename
 	{
-		public static readonly string Folder = Path.Combine(RootFolder, "4_rename").CreateFolderIFN();
-		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.zip").FromAllFilesSafe();
-		public static string CompanyZipFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.zip");
-		public static string[] GetAllCompanyZipFiles() => GetAllCompanies().SelectA(CompanyZipFile);
+		static readonly string Folder = Path.Combine(RootFolder, "4_rename").CreateFolderIFN();
+
+		public static readonly string DataFile = Path.Combine(Folder, "data.json");
 	}
+
+
 
 
 	public static class ReferenceData

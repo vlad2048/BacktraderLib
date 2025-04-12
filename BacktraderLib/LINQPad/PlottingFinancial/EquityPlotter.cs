@@ -1,5 +1,6 @@
 ﻿using BacktraderLib._sys;
 using Frames;
+using RxLib;
 
 namespace BacktraderLib;
 
@@ -24,7 +25,7 @@ public static class EquityPlotter
 	static readonly Config defaultConfig = new();
 
 
-	public static Plot<ScatterTrace> ToEquityPlot<I>(
+	public static Plot ToEquityPlot<I>(
 		this IRoVar<I> Δinp,
 
 		Frame<string, string, Bar> prices,

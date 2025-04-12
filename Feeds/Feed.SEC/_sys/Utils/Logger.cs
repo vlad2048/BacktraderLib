@@ -1,6 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
+using BaseUtils;
 using LINQPad;
 
 namespace Feed.SEC._sys.Utils;
@@ -38,29 +42,40 @@ static class LoggerExt
 	public static void Loop<T>(
 		this T[] xs,
 		Action<string> Log,
-		int stepNum,
-		string stepName,
-		Func<T, string> fmt,
-		Action<T> action
+		Action<T, int, int> action
 	)
 	{
-		Log.LogStep(stepNum, stepName, xs.Length);
-
 		for (var i = 0; i < xs.Length; i++)
 		{
 			var x = xs[i];
-			Log.Title($"[{i + 1}/{xs.Length}]    {fmt(x)}");
 
 			var sw = Stopwatch.StartNew();
-			action(x);
+			action(x, i + 1, xs.Length);
 			Log($"time:{(int)sw.Elapsed.TotalSeconds}s");
 
-			if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Q)
+			if (!IsRunningInLINQPad && Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Q)
 			{
 				Log("User interrupted");
 				break;
 			}
 		}
+	}
+
+	static bool IsRunningInLINQPad => Assembly.GetEntryAssembly()?.GetName().Name == "LINQPad.Query";
+
+	public static void Step(this Action<string> Log, Step step)
+	{
+		var all = Enum.GetValues<Step>().WhereA(e => e != SEC.Step.All);
+		var idx = all.IdxOf(step);
+		var cnt = all.Length;
+		var name = $"{step}";
+		var n = name.Length;
+		var line = new string('═', n);
+		var s = $"{idx + 1}/{cnt}";
+		Log("");
+		Log($"╔══════════╦═{line}═╗");
+		Log($"║ Step {s} ║ {name} ║");
+		Log($"╚══════════╩═{line}═╝");
 	}
 
 	public static void Title(this Action<string> Log, string s)
@@ -71,17 +86,5 @@ static class LoggerExt
 	}
 
 	public static string FmtArchFile(this string archFile) =>
-		$"{Path.GetFileName(archFile)}    {new FileInfo(archFile).Length / 1000:n0} kb";
-
-
-	static void LogStep(this Action<string> Log, int num, string name, int todo)
-	{
-		var n = name.Length;
-		var line = new string('═', n);
-		var s = $"{num}/{Consts.StepCount}";
-		Log("");
-		Log($"╔══════════╦═{line}═╗");
-		Log($"║ Step {s} ║ {name} ║    todo:{todo}");
-		Log($"╚══════════╩═{line}═╝");
-	}
+		$"{Path.GetFileName(archFile)}" + (File.Exists(archFile) ? $"    {new FileInfo(archFile).Length / 1000:n0} kb" : "");
 }

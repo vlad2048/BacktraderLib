@@ -11,7 +11,7 @@ public static class API
 {
 	public static Frame<string, string, Bar> Fetch(string[] syms) =>
 		PriceBuilder.Build(
-			syms.SelectA(e => (e, Price(e).Adjust().Bars)),
+			syms.SelectA(e => (e, FetchRaw(e).Adjust().Bars)),
 			e => e.Date,
 			e => (double)e.Open,
 			e => (double)e.High,
@@ -22,7 +22,7 @@ public static class API
 
 	public static IReadOnlyDictionary<string, Symbol> Symbols => symbols.Value;
 
-	public static Price Price(string symbol)
+	public static Price FetchRaw(string symbol)
 	{
 		var res = Symbols.ContainsKey(symbol) switch
 		{
@@ -46,9 +46,14 @@ public static class API
 	}
 
 
+	public static Frame<string, int> FetchYields() => FetchYieldsRaw().ToFrame();
+
+
 	// ***********
 	// * Private *
 	// ***********
 	static readonly Lazy<IReadOnlyDictionary<string, Symbol>> symbols = new(() => DBs.Stocks.Load(Keepers.Symbols));
 	static readonly Dictionary<string, Price> prices = new();
+
+	static Yields FetchYieldsRaw() => DBs.Rates.Load(Keepers.Yields);
 }

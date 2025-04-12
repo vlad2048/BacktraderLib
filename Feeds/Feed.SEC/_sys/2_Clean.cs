@@ -12,13 +12,21 @@ static class _2_Clean
 	public static void Run()
 	{
 		var Log = Logger.Make(LogCategory._2_Clean);
+		Log.Step(Step.Clean);
 
 		var quartersNext = Consts.Download.GetAllQuarters();
 		var quartersPrev = Consts.Clean.GetAllQuarters();
 		var quartersNew = quartersNext.ExceptA(quartersPrev);
 
-		quartersNew.Loop(Log, 2, "Clean", x => Consts.Download.QuarterZipFile(x).FmtArchFile(), quarterNew =>
+		if (quartersNew.Length == 0)
 		{
+			Log("UP-TO-DATE");
+			return;
+		}
+
+		quartersNew.Loop(Log, (quarterNew, idx, cnt) =>
+		{
+			Log.Title($"[{idx}/{cnt}]    {Consts.Download.QuarterZipFile(Path.GetFileNameWithoutExtension(quarterNew)).FmtArchFile()}");
 			var archFileSrc = Consts.Download.QuarterZipFile(quarterNew);
 			var archFileDst = Consts.Clean.QuarterZipFile(quarterNew);
 

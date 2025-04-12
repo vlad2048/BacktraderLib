@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Reflection;
 using BaseUtils;
 using Feed.SEC._sys;
 using Feed.SEC._sys.Logic;
@@ -20,7 +21,7 @@ enum Step
 	Group = 4,
 	Rename = 8,
 
-	All = Download | Clean | Group,
+	All = Download | Clean | Group | Rename,
 }
 
 static class APIDev
@@ -38,7 +39,7 @@ static class APIDev
 		if (step.HasFlag(Step.Download)) _1_Download.Run();
 		if (step.HasFlag(Step.Clean)) _2_Clean.Run();
 		if (step.HasFlag(Step.Group)) _3_Group.Run();
-		if (step.HasFlag(Step.Rename)) _4_Rename.Run();
+		if (step.HasFlag(Step.Rename)) _4_NameChangeCompiler.Run();
 		Console.WriteLine();
 		Console.WriteLine("FINISHED");
 	}
@@ -50,6 +51,10 @@ static class APIDev
 		if (step.HasFlag(Step.Group)) Check_Group();
 	}
 
+	public static string[] GetCompanies() => Consts.Group.GetAllCompanies();
+
+	public static NameChangeInfos GetNameChanges() => JsonUtils.Load<NameChangeInfos>(Consts.Rename.DataFile);
+
 	public static IEnumerable<T> Load_Download_Rows<T>() where T : IStringyRow<T> => StreamStringyRowsInArchives<T>(Consts.Download.GetAllZipFiles(), LineMethod.OriginalEscaping);
 
 	public static IEnumerable<T> Load_Clean_StringyRows<T>() where T : IStringyRow<T> => StreamStringyRowsInArchives<T>(Consts.Clean.GetAllZipFiles(), LineMethod.ReplaceTabChar);
@@ -57,6 +62,7 @@ static class APIDev
 	public static IEnumerable<T> Load_Clean_Rows<T>() where T : IRow<T> => StreamRowsInArchives<T>(Consts.Clean.GetAllZipFiles());
 
 	public static IEnumerable<T> Load_Group_Rows<T>(string company) where T : IRow<T> => StreamRowsInArchives<T>([Consts.Group.CompanyZipFile(company)]);
+	public static IEnumerable<T> Load_All_Group_Rows<T>() where T : IRow<T> => StreamRowsInArchives<T>(Consts.Group.GetAllCompanyZipFiles());
 
 	public static RowSet Load_Group_RowSet(string company) => RowReader.ReadRowSet(Consts.Group.CompanyZipFile(company)).EnsureConsistent();
 

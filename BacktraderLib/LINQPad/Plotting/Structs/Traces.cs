@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 namespace BacktraderLib;
 
 [JsonDerivedType(typeof(ScatterTrace))]
+[JsonDerivedType(typeof(BarTrace))]
+[JsonDerivedType(typeof(HeatmapTrace))]
 public interface ITrace
 {
 	TraceType Type { get; }
@@ -45,7 +47,7 @@ public sealed record BarTrace : ITrace
 	public FlexArray? X { get; init; }
 	public FlexArray? Y { get; init; }
 	public int? Offset { get; init; }
-	public int[]? Width { get; init; }
+	public double[]? Width { get; init; }
 
 	public bool? Visible { get; init; }
 	public string? Name { get; init; }

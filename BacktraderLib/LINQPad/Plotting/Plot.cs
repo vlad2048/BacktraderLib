@@ -1,5 +1,6 @@
 ﻿using BacktraderLib._sys;
 using BacktraderLib._sys.Events_;
+using RxLib;
 
 namespace BacktraderLib;
 
@@ -24,39 +25,32 @@ public sealed class PlotOpts
 
 
 
-public static class Plot
+
+// Inherit from Tag
+// ----------------
+public sealed class Plot : Tag
 {
-	public static Plot<T> Make<T>(
-		T[] traces,
+	readonly Action<string> Log = Logger.Make(LogCategory.Plot);
+
+	readonly TraceLayoutKeeper traceLayout;
+
+
+	public IObservable<ClickArgs> WhenClick { get; }
+
+	public static Plot Make(
+		ITrace[] traces,
 		Layout? layout = null,
 		Config? config = null,
 		Action<PlotOpts>? optFun = null
-	) where T : ITrace, new() => new(
+	) => new(
 		traces,
 		layout ?? new Layout(),
 		config ?? new Config(),
 		PlotOpts.Build(optFun)
 	);
-}
-
-
-
-
-
-// Inherit from Tag
-// ----------------
-public sealed class Plot<T> : Tag where T : ITrace, new()
-{
-	readonly Action<string> Log = Logger.Make(LogCategory.Plot);
-
-	readonly TraceLayoutKeeper<T> traceLayout;
-
-
-	public IObservable<ClickArgs> WhenClick { get; }
-
 
 	internal Plot(
-		T[] traces,
+		ITrace[] traces,
 		Layout layout,
 		Config config,
 		PlotOpts opts
@@ -64,7 +58,7 @@ public sealed class Plot<T> : Tag where T : ITrace, new()
 	{
 		Id = IdGen.Make();
 		var isRendered = Var.Make(false);
-		traceLayout = new TraceLayoutKeeper<T>(
+		traceLayout = new TraceLayoutKeeper(
 			traces,
 			layout,
 			isRendered,
@@ -97,10 +91,10 @@ public sealed class Plot<T> : Tag where T : ITrace, new()
 
 
 
-	public void Update((int, T)[] updatesTrace) => Update(updatesTrace, new Layout());
+	public void Update((int, ITrace)[] updatesTrace) => Update(updatesTrace, new Layout());
 	public void Update(Layout updateLayout) => Update([], updateLayout);
 
-	public void Update((int, T)[] updatesTrace, Layout updateLayout)
+	public void Update((int, ITrace)[] updatesTrace, Layout updateLayout)
 	{
 		Log("UpdateTracesLayout");
 		traceLayout.OnUpdate(updatesTrace, updateLayout);

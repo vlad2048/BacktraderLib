@@ -11,14 +11,21 @@ static class _3_Group
 	public static void Run()
 	{
 		var Log = Logger.Make(LogCategory._3_Group);
+		Log.Step(Step.Group);
 
 		var quartersNext = Consts.Clean.GetAllQuarters();
 		var quartersPrev = JsonUtils.LoadOr(Consts.Group.QuartersDoneFile, new List<string>());
 		var quartersNew = quartersNext.ExceptA(quartersPrev);
 
-
-		quartersNew.Loop(Log, 3, "Group", x => Consts.Clean.QuarterZipFile(x).FmtArchFile(), quarterNew =>
+		if (quartersNew.Length == 0)
 		{
+			Log("UP-TO-DATE");
+			return;
+		}
+
+		quartersNew.Loop(Log, (quarterNew, idx, cnt) =>
+		{
+			Log.Title($"[{idx}/{cnt}]    {Consts.Clean.QuarterZipFile(Path.GetFileNameWithoutExtension(quarterNew)).FmtArchFile()}");
 			Chrono.Start("Read Clean.Rows", Log);
 			var srcRows = RowReader.ReadRowSet(Consts.Clean.QuarterZipFile(quarterNew));
 

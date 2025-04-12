@@ -14,7 +14,7 @@ static partial class SqlReading
 		var srcType = srcCol.CsType;
 		if (reader.IsDBNull(idx))
 		{
-			if (srcType == typeof(decimal)) throw new ArgumentException("decimal? is actuall null");
+			if (srcType == typeof(decimal) && dstType != typeof(decimal?)) throw new ArgumentException("NULL found in decimal column. The property type needs to be decimal? and not decimal.");
 			return null;
 		}
 
@@ -44,7 +44,7 @@ static partial class SqlReading
 
 		if (srcType == typeof(decimal))
 		{
-			if (dstType != typeof(decimal)) throw new ArgumentException(MkMapErr("decimal"));
+			if (dstType != typeof(decimal) && dstType != typeof(decimal?)) throw new ArgumentException(MkMapErr("decimal, decimal?"));
 			return reader.GetDecimal(idx);
 		}
 

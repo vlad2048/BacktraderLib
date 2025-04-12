@@ -3,10 +3,6 @@
 namespace Feed.NoPrefs._sys.DoltLogic;
 
 
-sealed record KeeperData<T>(
-	DateTime LastPullTime,
-	T Data
-);
 
 sealed record Keeper<T>(
 	string File,
@@ -18,6 +14,12 @@ sealed record Keeper<T>(
 
 static class KeeperLogic
 {
+	sealed record KeeperData<T>(
+		DateTime LastPullTime,
+		T Data
+	);
+
+	
 	public static T Load<T>(DoltDB db, Keeper<T> keeper)
 	{
 		if (!File.Exists(keeper.File))

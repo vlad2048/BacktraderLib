@@ -1,6 +1,7 @@
 ﻿using BacktraderLib._sys;
 using BacktraderLib.Shapers;
 using Frames;
+using RxLib;
 
 namespace BacktraderLib;
 
@@ -25,7 +26,7 @@ public static class SymbolPlotter
 	static readonly Config defaultConfig = new();
 
 
-	public static Plot<ScatterTrace> ToSymbolPlot<I>(
+	public static Plot ToSymbolPlot<I>(
 		this IRoVar<I> Δinp,
 		IRoVar<string> Δsym,
 		Frame<string, string, Bar> prices,
@@ -37,7 +38,7 @@ public static class SymbolPlotter
 	{
 		var timeOfs = Δinp.V.SimResult.TimeOfs;
 		var Δdata = Var.Expr(() => new Data<I>(Δinp.V, Δsym.V));
-		var plot = Plot.Make<ScatterTrace>(
+		var plot = Plot.Make(
 			[],
 			ObjectMerger.MergeOpt(defaultLayout, layout),
 			ObjectMerger.MergeOpt(defaultConfig, config),
@@ -48,7 +49,7 @@ public static class SymbolPlotter
 			}
 		);
 
-		ScatterTrace[] MakeTraceUpdates(Data<I> data) => [
+		ITrace[] MakeTraceUpdates(Data<I> data) => [
 			prices[data.Sym, Bar.Close].ToTrace(),
 			..extraTraces(data.Inp, data.Sym),
 			data.Inp.SimResult.Syms[data.Sym].Orders.ToBuyMarkersTrace(prices.Index),

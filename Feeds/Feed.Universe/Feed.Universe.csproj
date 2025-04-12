@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Base\FeedUtils\FeedUtils.csproj" />
+    <ProjectReference Include="..\..\Base\ScrapeUtils\ScrapeUtils.csproj" />
+    <ProjectReference Include="..\Feed.SEC\Feed.SEC.csproj" />
+  </ItemGroup>
+
+</Project>

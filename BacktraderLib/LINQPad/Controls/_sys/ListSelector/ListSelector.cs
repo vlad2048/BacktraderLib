@@ -3,6 +3,7 @@ using System.Reflection;
 using BaseUtils;
 using LINQPad;
 using LINQPad.Controls;
+using RxLib;
 
 namespace BacktraderLib._sys.ListSelector;
 

@@ -8,7 +8,8 @@ static class FiledDateMapper
 		GetHistNames(company)
 			.Select(MapHistName)
 			.Merge()
-			.ExtrapolateMissingQuarters(quarters);
+			.ToSortedDictionary();
+			//.ExtrapolateMissingQuarters(quarters);
 
 
 	static string[] GetHistNames(string company)
@@ -44,10 +45,15 @@ static class FiledDateMapper
 
 	static IReadOnlyDictionary<Quarter, DateOnly> Merge(this IEnumerable<IReadOnlyDictionary<Quarter, DateOnly>> source)
 	{
-		var map = new Dictionary<Quarter, DateOnly>();
+		/*var map = new Dictionary<Quarter, DateOnly>();
 		foreach (var item in source)
 		foreach (var (quarter, filed) in item)
 			map.TryAdd(quarter, filed);
+		return map;*/
+		var map = new Dictionary<Quarter, DateOnly>();
+		foreach (var item in source.Reverse())
+		foreach (var (quarter, filed) in item)
+			map[quarter] = filed;
 		return map;
 	}
 
