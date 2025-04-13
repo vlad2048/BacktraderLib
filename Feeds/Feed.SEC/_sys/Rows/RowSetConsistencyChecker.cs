@@ -1,21 +1,14 @@
-﻿using Feed.SEC._sys.Rows;
-using Feed.SEC._sys.RowsStringy;
-using Feed.SEC._sys.Utils;
+﻿using Feed.SEC._sys.Utils;
 
-namespace Feed.SEC._sys.Logic;
+namespace Feed.SEC._sys.Rows;
 
-static class RowArchiveChecker
+static class RowSetConsistencyChecker
 {
-	public static void CheckAsStringyRows(string archFile, LineMethod method)
+	public static RowSet CheckConsistency(this RowSet set, string? archFile = null)
 	{
-		string Err(string msg) => $"{msg} in {archFile}";
+		string Err(string msg) => $"{msg} in {archFile ?? "n/a"}";
 
-		var (nums, pres, subs, tags) = StringyRowUtils.ReadRowSet(archFile, method);
-
-		subs.EnsureTrue(SubRow.IsParsable, Err("Invalid [Sub]"));
-		nums.EnsureTrue(NumRow.IsParsable, Err("Invalid [Num]"));
-		tags.EnsureTrue(TagRow.IsParsable, Err("Invalid [Tag]"));
-		pres.EnsureTrue(PreRow.IsParsable, Err("Invalid [Pre]"));
+		var (nums, pres, subs, tags) = set;
 
 		// ReSharper disable UnusedVariable
 		var subKeys = subs.EnsureUnique(e => e.Key, Err("Duplicate rows in [Sub]"));
@@ -32,10 +25,7 @@ static class RowArchiveChecker
 		pres.EnsureRefExists(e => e.TagKey, tagKeys, Err("[Pre] with no [Tag]"));
 
 		pres.EnsureRefExists(e => (AdshKey: e.Key.SubKey, TagVersionKey: e.TagKey), numPartialKeys, Err("[Pre] with no [Sub],[Tag]"));
+
+		return set;
 	}
-
-
-	public static void CheckAsNormalRows(string archFile) =>
-		RowsLoader.Load([archFile])
-			.CheckConsistency(archFile);
 }

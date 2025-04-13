@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using BaseUtils;
 using Feed.SEC._sys.Rows;
-using Feed.SEC._sys.Rows.Utils;
 using Feed.SEC._sys.Utils;
 
 namespace Feed.SEC._sys;
@@ -27,7 +26,7 @@ static class _3_Group
 		{
 			Log.Title($"[{idx}/{cnt}]    {Consts.Clean.QuarterZipFile(Path.GetFileNameWithoutExtension(quarterNew)).FmtArchFile()}");
 			Chrono.Start("Read Clean.Rows", Log);
-			var srcRows = RowReader.ReadRowSet(Consts.Clean.QuarterZipFile(quarterNew));
+			var srcRows = RowsLoader.Load([Consts.Clean.QuarterZipFile(quarterNew)]);
 
 
 			Chrono.Start("Group per company");
@@ -60,7 +59,7 @@ static class _3_Group
 
 					var rowSet = new RowSet(dstNums, dstPres, dstSubs, dstTags);
 
-					RowReader.MergeRowSet(dstArchFile, rowSet);
+					RowSetMerger.Merge(dstArchFile, rowSet);
 				}
 			);
 

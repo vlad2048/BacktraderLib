@@ -1,5 +1,4 @@
 ﻿using _sys.Logging.Structs;
-using _sys.Logging.Utils;
 using BaseUtils;
 
 namespace _sys.Logging;

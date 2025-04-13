@@ -21,11 +21,11 @@ public static class CompanyMatcher
 
 	public static (string[], Func<string[], string>) GetSecNamesAndDisambiguator(string? investigateName = null)
 	{
-		var changeData = SEC.APIDev.GetNameChanges();
+		var changeData = SEC.API.Utils.GetNameChanges();
 		var formerSet = changeData.Changes.ToHashSet(e => e.Former);
 		var cutoff = changeData.LastFiledDates.Values.Max().AddDays(-30 * 6);
 
-		var allNames = SEC.APIDev.GetCompanies();
+		var allNames = SEC.API.Utils.GetCompanies();
 
 		var names = allNames
 			.WhereInvestigate(e => !secNameIgnores.Contains(e), investigateName, "InIgnores")

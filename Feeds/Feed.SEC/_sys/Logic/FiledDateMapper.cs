@@ -20,7 +20,7 @@ static class FiledDateMapper
 		while (queue.TryDequeue(out var cur))
 		{
 			list.Add(cur);
-			var formers = APIDev.Load_Group_RowSet(cur).Subs
+			var formers = API.Rows.Group.Load<SubRow>(cur)
 				.Where(e => e.Former != null)
 				.Select(e => e.Former!)
 				.Distinct();
@@ -33,7 +33,7 @@ static class FiledDateMapper
 
 
 	static IReadOnlyDictionary<Quarter, DateOnly> MapHistName(string histName) =>
-		APIDev.Load_Group_RowSet(histName).Subs
+		API.Rows.Group.Load<SubRow>(histName)
 			.Where(e => e.Form is "10-Q" or "10-K")
 			.GroupBy(e => e.Quarter)
 			.OrderBy(g => g.Key)
@@ -45,11 +45,6 @@ static class FiledDateMapper
 
 	static IReadOnlyDictionary<Quarter, DateOnly> Merge(this IEnumerable<IReadOnlyDictionary<Quarter, DateOnly>> source)
 	{
-		/*var map = new Dictionary<Quarter, DateOnly>();
-		foreach (var item in source)
-		foreach (var (quarter, filed) in item)
-			map.TryAdd(quarter, filed);
-		return map;*/
 		var map = new Dictionary<Quarter, DateOnly>();
 		foreach (var item in source.Reverse())
 		foreach (var (quarter, filed) in item)

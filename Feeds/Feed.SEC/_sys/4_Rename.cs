@@ -1,5 +1,4 @@
-﻿using Feed.SEC._sys.Rows;
-using Feed.SEC._sys.Utils;
+﻿using Feed.SEC._sys.Utils;
 
 namespace Feed.SEC._sys;
 
@@ -26,7 +25,7 @@ static class _4_NameChangeCompiler
 		}
 		Log("timeNext < timePrev => Updating...");
 
-		var subRows = APIDev.Load_All_Group_Rows<SubRow>().ToArray();
+		var subRows = API.Rows.Group.Load<SubRow>().ToArray();
 		var lastFiledDates = subRows
 			.GroupBy(e => e.Name)
 			.ToDictionary(

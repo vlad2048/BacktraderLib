@@ -6,7 +6,6 @@ global using System.Net.Http;
 global using System.Threading;
 global using System.Threading.Tasks;
 global using static WebScript.Globals;
-using System;
 using Microsoft.Playwright;
 
 namespace WebScript;

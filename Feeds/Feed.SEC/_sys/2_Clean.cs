@@ -2,7 +2,6 @@
 using System.IO.Compression;
 using BaseUtils;
 using Feed.SEC._sys.Logic;
-using Feed.SEC._sys.Rows;
 using Feed.SEC._sys.RowsStringy;
 
 namespace Feed.SEC._sys;
@@ -60,7 +59,7 @@ static class _2_Clean
 	{
 		var rowsToRemove = new List<Loc>();
 
-		var (nums, pres, subs, tags) = StringyRowReader.ReadRowSet(archFileSrc, LineMethod.OriginalEscaping);
+		var (nums, pres, subs, tags) = StringyRowUtils.ReadRowSet(archFileSrc, LineMethod.OriginalEscaping);
 		var stats = new Stats(Log, subs, nums, tags, pres);
 
 
@@ -111,7 +110,7 @@ static class _2_Clean
 
 		if (dups.Length > 0)
 		{
-			StringyRowReader.PrintLines(dups.SelectA(e => e.Loc), T.ColumnCount, Console.WriteLine);
+			StringyRowUtils.PrintLines(dups.SelectA(e => e.Loc), T.ColumnCount, Console.WriteLine);
 			throw new ArgumentException($"Duplicate keys in {typeof(T).Name}");
 		}
 	}
@@ -123,7 +122,7 @@ static class _2_Clean
 	{
 		var broken = srcRows.WhereA(e => !dstKeys.Contains(refFun(e)));
 		var valid = srcRows.WhereA(e => dstKeys.Contains(refFun(e)));
-		//if (broken.Length > 0) StringyRowReader.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, ctx.LogVerbose);
+		//if (broken.Length > 0) StringyRowUtils.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, ctx.LogVerbose);
 		rowsToRemove.AddRange(broken.Select(e => e.Loc));
 		return (valid, broken.Length);
 	}
@@ -134,7 +133,7 @@ static class _2_Clean
 
 		if (broken.Length > 0)
 		{
-			StringyRowReader.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, Console.WriteLine);
+			StringyRowUtils.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, Console.WriteLine);
 			throw new ArgumentException($"Foreign key violation in {typeof(TSrc).Name} -> {typeof(TDst).Name}");
 		}
 	}*/
@@ -146,7 +145,7 @@ static class _2_Clean
 	{
 		var dstKeys = dstRows.Select(dstFun).ToHashSet();
 		var broken = srcRows.WhereA(e => !dstKeys.Contains(srcFun(e)));
-		//if (broken.Length > 0) StringyRowReader.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, ctx.LogVerbose);
+		//if (broken.Length > 0) StringyRowUtils.PrintLines(broken.SelectA(e => e.Loc), TSrc.ColumnCount, ctx.LogVerbose);
 		rowsToRemove.AddRange(broken.Select(e => e.Loc));
 		return broken.Length;
 	}
@@ -157,7 +156,7 @@ static class _2_Clean
 	{
 		var invalid = rows.WhereA(e => !isValid(e));
 		var valid = rows.WhereA(isValid);
-		//if (invalid.Length > 0) StringyRowReader.PrintLines(invalid.SelectA(e => e.Loc), T.ColumnCount, ctx.LogVerbose);
+		//if (invalid.Length > 0) StringyRowUtils.PrintLines(invalid.SelectA(e => e.Loc), T.ColumnCount, ctx.LogVerbose);
 		rowsToRemove.AddRange(invalid.Select(e => e.Loc));
 		return (valid, invalid.Length);
 	}

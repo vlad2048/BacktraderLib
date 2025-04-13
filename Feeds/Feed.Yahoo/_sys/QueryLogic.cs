@@ -1,5 +1,4 @@
 ﻿using Feed.Yahoo._sys.Errors;
-using System.Text;
 using System.Text.Json;
 using Feed.Yahoo._sys.Utils;
 using FeedUtils;

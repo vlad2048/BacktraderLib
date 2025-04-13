@@ -6,6 +6,6 @@ static class Program
 {
 	static void Main()
 	{
-		APIDev.Run();
+		API.Fetcher.Run();
 	}
 }
