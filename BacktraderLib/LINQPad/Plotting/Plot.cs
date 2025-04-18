@@ -56,7 +56,6 @@ public sealed class Plot : Tag
 		PlotOpts opts
 	) : base("div")
 	{
-		Id = IdGen.Make();
 		var isRendered = Var.Make(false);
 		traceLayout = new TraceLayoutKeeper(
 			traces,

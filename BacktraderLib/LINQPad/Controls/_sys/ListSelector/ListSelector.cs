@@ -9,21 +9,21 @@ namespace BacktraderLib._sys.ListSelector;
 
 static class ListSelector
 {
-	public static (IRoVar<S>, Tag) Make<T, S, U>(
+	public static (IRoVar<T>, Tag) Make<T, U>(
 		IRoVar<T[]> Δsource,
-		Func<T, S>? selFun,
 		Func<T, U> dispFun,
 		int? pageSize,
 		Expression<Func<T, object>>[]? orderFuns,
-		Func<T, string>? searchFun
+		Func<T, string>? searchFun,
+		bool useSelector
 	) where T : class
 	{
 		if (Δsource.V.Length == 0) throw new ArgumentException("Empty array not supported");
 
-		var Δrx = selFun switch
+		var Δrx = useSelector switch
 		{
-			not null => Var.Make(Δsource.V[0]),
-			null => null,
+			true => Var.Make(Δsource.V[0]),
+			false => null,
 		};
 		var uiCtrls = new List<Tag>();
 		
@@ -40,10 +40,10 @@ static class ListSelector
 			]);
 
 		return (
-			selFun switch
+			useSelector switch
 			{
-				not null => Var.Expr(() => selFun(Δrx.V)),
-				null => null!,
+				true => Δrx,
+				false => null!,
 			},
 			ui
 		);
@@ -111,7 +111,7 @@ static class ListSelector
 
 		var orderings = orderFuns.MakeOrds();
 		var Δordering = Var.Make(orderings[0]);
-		var tagCtrl = new SelectBox(orderings, 0, c => Δordering.V = orderings[c.SelectedIndex])
+		var tagCtrl = new SelectBox(orderings.ToObjects(), 0, c => Δordering.V = orderings[c.SelectedIndex])
 		{
 			Styles =
 			{
@@ -257,7 +257,7 @@ static class ListSelector
 					[
 						new Tag("tr")
 						{
-							Kids = props.SelectA(e => new Tag("th", e.Name)),
+							Kids = props.SelectA(e => new Tag("th", null, e.Name)),
 						},
 					],
 				},
@@ -297,7 +297,7 @@ static class ListSelector
 			{
 				Kids = [e],
 			},
-			_ => new Tag("td", $"{obj}"),
+			_ => new Tag("td", null, $"{obj}"),
 		};
 	sealed record Prop<U>(string Name, Func<U, object> Get);
 	static Prop<U>[] GetProps<U>() =>

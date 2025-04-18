@@ -136,6 +136,8 @@ public static class QuarterUtils
 		var vB = qB.Year * 4 + (int)qB.Q;
 		return Math.Abs(vA - vB);
 	}
+
+	public static string FmtHuman(this Quarter[] xs) => xs.Select(x => $"({x.Year} {x.Q})").JoinText(", ");
 }
 
 

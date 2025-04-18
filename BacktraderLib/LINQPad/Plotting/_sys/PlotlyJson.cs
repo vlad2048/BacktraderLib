@@ -25,6 +25,9 @@ public enum Default { SomeName }		'SomeName'
 [PlotlyEnum(EnumStyle.LowerCase)]
 public enum Default { SomeName }		'somename'
 
+[PlotlyEnum(EnumStyle.CamelCase)]
+public enum Default { SomeName }		'someName'
+
 [PlotlyEnum(EnumStyle.PlusSeparated)]
 public enum Default { SomeName }		'some+name'
 

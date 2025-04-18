@@ -1,48 +1,53 @@
-﻿using BaseUtils;
+﻿global using static WebScript.StaticsAccessor;
+using LINQPad;
 using Microsoft.Playwright;
-using WebScript._sys;
-using WebScript._sys.Utils;
-using WebScript.Structs;
 
 namespace WebScript;
 
 
-static class Symbols
+static class StaticsContainer
 {
-	public static readonly SymbolDef Tesla = new(new SearchItem("Tesla", "TSLA", "NASDAQ"), "TESLA, INC.");
-	public static readonly SymbolDef Macy = new(new SearchItem("Macy's", "M", "NYSE"), "MACY'S, INC.");
+	public static IPage? Page { get; set; }
+	public static ITracing? Tracing { get; set; }
+	public static DumpContainer? LogDC { get; set; }
+	public static CancellationToken? Cancel { get; set; }
+}
+
+static class StaticsAccessor
+{
+	public static IPage Page => StaticsContainer.Page ?? throw new ArgumentException("StaticsContainer.Page not initialized");
+	public static ITracing Tracing => StaticsContainer.Tracing ?? throw new ArgumentException("StaticsContainer.Tracing not initialized");
+	public static void LogAppend(object obj)
+	{
+		if (StaticsContainer.LogDC != null)
+			StaticsContainer.LogDC.AppendContent(obj);
+		else
+			obj.Dump();
+	}
+	public static CancellationToken Cancel => StaticsContainer.Cancel ?? throw new ArgumentException("StaticsContainer.Cancel not initialized");
+	public static void CancelCheck() => Cancel.ThrowIfCancellationRequested();
 }
 
 
 static class Script
 {
-	public static async Task Main(IPage page, ITracing tracing, Action<object> log)
+	public static async Task Main(IPage page, ITracing? tracing, DumpContainer logDC, CancellationToken cancel)
 	{
-		(Page, Tracing, Globals.log) = (page, tracing, log);
+		(StaticsContainer.Page, StaticsContainer.Tracing, StaticsContainer.LogDC, StaticsContainer.Cancel) = (page, tracing, logDC, cancel);
 
-		Log("v14");
+		LogAppend("Start");
 
-		//Log((await Page.GetDataTestIdTree()).FilterUpto(e => e.Contains("search")));
-		//await GlobalPage.SearchGoto(Symbols.Tesla);
-
-		await RunScrape();
-		//await Page.GetByRole(AriaRole.Button, new() { Name = "Quarterly" }).Last.ClickAsync(Consts.Click_QuarterlyDelay);
-
-		//div[@data-testid='layout-component']//div[@data-testid='search-bar')]
-
-		//Log($"cnt:{await Page.GetByTestId("instrument-screen-section-header-stats").GetByTestId("instrument-screen-section-header-icon-stats-true").CountAsync()}");
-		//Log($"vis:{await Page.GetByTestId("instrument-screen-section-header-stats").GetByTestId("instrument-screen-section-header-icon-stats-true").Last.IsVisibleAsync()}");
-
-		Log("done");
-	}
+		if (await Page.GetByTestId("layout-component").GetByTestId("search-bar").CountAsync() == 0)
+		{
+			LogAppend("    [Search] Click on search");
+			await Page.GetByTestId("app-header-search-button").ClickAsync();
+		}
+		else
+		{
+			LogAppend("    [Search] Already in search");
+		}
 
 
-	static async Task RunScrape()
-	{
-		var done = new HashSet<(ReportType, Quarter)>();
-		var file = @"C:\ProgramData\Feed.Trading212\data.json";
-		var data = await Scraper.Scrape(Symbols.Tesla, done);
-		data.Save(file);
-		Log($"Done: {data.Reports.Sum(kv => kv.Value.Quarters.Count)}");
+		LogAppend("Done");
 	}
 }

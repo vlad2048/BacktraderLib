@@ -1,4 +1,6 @@
-﻿namespace Feed.Universe;
+﻿using BaseUtils;
+
+namespace Feed.Universe;
 
 
 public enum ExchangeName
@@ -31,6 +33,10 @@ public sealed record IndexUniverse(IndexName Name) : IUniverse
 
 public static class Universe
 {
+	public static readonly IUniverse[] AllExchanges = Enum.GetValues<ExchangeName>().SelectA(Exchange);
+	public static readonly IUniverse[] AllIndices = Enum.GetValues<IndexName>().SelectA(Index);
+	public static readonly IUniverse[] All = AllExchanges.ConcatA(AllIndices);
+
 	public static IUniverse Exchange(ExchangeName name) => new ExchangeUniverse(name);
 	public static IUniverse Index(IndexName name) => new IndexUniverse(name);
 }

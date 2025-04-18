@@ -1,5 +1,4 @@
-﻿using BacktraderLib._sys.Utils;
-using LINQPad.Controls.Core;
+﻿using LINQPad.Controls.Core;
 using LINQPad.Controls;
 using LINQPad;
 using System.Reflection;
@@ -25,9 +24,8 @@ public static class ToTagExt
 		var (idDad, idKid) = (IdGen.Make(), IdGen.Make());
 		kid.HtmlElement.ID = idKid;
 
-		var dad = new Tag("div")
+		var dad = new Tag("div", idDad)
 		{
-			Id = idDad,
 			OnRender = () =>
 			{
 				kid.Dump();

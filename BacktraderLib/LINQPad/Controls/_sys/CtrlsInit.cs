@@ -1,4 +1,6 @@
-﻿using BacktraderLib._sys.Slider;
+﻿using BacktraderLib._sys.JQuery;
+using BacktraderLib._sys.Slider;
+using BacktraderLib._sys.Tabulator;
 using LINQPad;
 
 namespace BacktraderLib._sys;
@@ -7,12 +9,22 @@ static class CtrlsInit
 {
 	public static void Init()
 	{
+		JQueryInit.Init();
 		SliderInit.Init();
+		TabulatorInit.Init();
+		Ctrls.Init_Log();
+		Ctrls.Init_ButtonScript();
+		Ctrls.Init_ButtonCancellable();
+
 		Util.HtmlHead.AddStyles("""
 		.widget-horz {
 			display: flex;
 			column-gap: 5px;
-			align-items: baseline;
+		}
+		.widget-horz-stretch {
+			display: flex;
+			column-gap: 5px;
+			align-items: stretch;
 		}
 		.widget-vert {
 			display: flex;
@@ -41,6 +53,7 @@ static class CtrlsInit
 static class CtrlsClasses
 {
 	public const string WidgetHorz = "widget-horz";
+	public const string WidgetHorzStretch = "widget-horz-stretch";
 	public const string WidgetVert = "widget-vert";
 
 	public const string Widget = "widget";

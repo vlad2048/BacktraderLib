@@ -6,4 +6,11 @@ public static class StringExt
 	public static string JoinLines(this IEnumerable<string> source) => string.Join(Environment.NewLine, source);
 
 	public static string JoinText<T>(this IEnumerable<T> source, string separator) => string.Join(separator, source);
+
+	public static string Truncate(this string str, int lng) => str switch
+	{
+		null => throw new ArgumentException(),
+		_ when str.Length <= lng => str,
+		_ => str[..lng]
+	};
 }

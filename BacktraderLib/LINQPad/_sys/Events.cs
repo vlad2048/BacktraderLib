@@ -1,5 +1,4 @@
-﻿using BacktraderLib._sys.Utils;
-using LINQPad;
+﻿using LINQPad;
 using LINQPad.Controls;
 
 namespace BacktraderLib._sys;

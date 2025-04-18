@@ -1,6 +1,4 @@
-﻿using BacktraderLib._sys.Utils;
-
-namespace BacktraderLib._sys.Slider;
+﻿namespace BacktraderLib._sys.Slider;
 
 
 static class Slider
@@ -15,9 +13,8 @@ static class Slider
 	)
 	{
 		var id = IdGen.Make();
-		var tag = new Tag("input")
+		var tag = new Tag("input", id)
 		{
-			Id = id,
 			OnRenderJS = JS.Fmt(
 				"""
 

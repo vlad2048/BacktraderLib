@@ -35,7 +35,7 @@ public static partial class Ctrls
 					Class = CtrlsClasses.Widget,
 					Kids =
 					[
-						new Tag("label", name),
+						new Tag("label", null, name),
 						tag,
 					],
 				},

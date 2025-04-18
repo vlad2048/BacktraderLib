@@ -12,13 +12,13 @@ public static partial class Ctrls
 		int pageSize,
 		Expression<Func<T, object>>[]? orderFuns = null,
 		Func<T, string>? searchFun = null
-	) where T : class => ListSelector.Make<T, int, U>(
+	) where T : class => ListSelector.Make(
 		source,
-		null,
 		dispFun,
 		pageSize,
 		orderFuns,
-		searchFun
+		searchFun,
+		false
 	).Item2;
 
 	public static Tag ToListViewer<T, U>(
@@ -37,32 +37,29 @@ public static partial class Ctrls
 
 
 
-	public static (IRoVar<S>, Tag) ToListSelector<T, S, U>(
+	public static (IRoVar<T>, Tag) ToListSelector<T, U>(
 		this IRoVar<T[]> source,
-		Func<T, S> selFun,
 		Func<T, U> dispFun,
 		int? pageSize = null,
 		Expression<Func<T, object>>[]? orderFuns = null,
 		Func<T, string>? searchFun = null
 	) where T : class => ListSelector.Make(
 		source,
-		selFun,
 		dispFun,
 		pageSize,
 		orderFuns,
-		searchFun
+		searchFun,
+		true
 	);
 	
-	public static (IRoVar<S>, Tag) ToListSelector<T, S, U>(
+	public static (IRoVar<T>, Tag) ToListSelector<T, U>(
 		this T[] source,
-		Func<T, S> selFun,
 		Func<T, U> dispFun,
 		int pageSize,
 		Expression<Func<T, object>>[]? orderFuns = null,
 		Func<T, string>? searchFun = null
 	) where T : class =>
 		Var.MakeConst(source).ToListSelector(
-			selFun,
 			dispFun,
 			pageSize,
 			orderFuns,

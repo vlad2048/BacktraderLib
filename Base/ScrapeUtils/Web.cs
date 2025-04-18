@@ -1,29 +1,139 @@
-﻿using Microsoft.Playwright;
+﻿using System.Reactive.Disposables;
+using LINQPad;
+using Microsoft.Playwright;
 
 namespace ScrapeUtils;
 
-public static class Web
+public sealed class WebOpt
 {
-	static IBrowserContext? browserCtx;
+	public bool Headless { get; init; } = false;
+	public float DefaultTimeoutMS { get; init; } = 3000;
+	public float DefaultNavigationTimeoutMS { get; init; } = 30000;
+}
 
-	internal static void Init() => browserCtx?.DisposeAsync();
+public sealed class Web : IDisposable
+{
+	readonly string url;
+	readonly WebOpt opt;
+	readonly Retrier retrier = new();
+	IBrowserContext? browserCtx;
+	IPage? page;
+	CancellationToken? cancelToken;
+
+	public void Dispose() => browserCtx?.DisposeAsync();
+
+	public IPage Page => page ?? throw new ArgumentException("Call Web.EnsurePageIsReady() first");
+	public DumpContainer Log { get; }
+	public CancellationToken CancelToken => cancelToken ?? CancellationToken.None;
+	public IDisposable UseCancelToken(CancellationToken cancelToken_)
+	{
+		cancelToken = cancelToken_;
+		return Disposable.Create(() => cancelToken = null);
+	}
+
+	public event Action<FullStats>? OnStatsChanged;
 
 
-	public static ITracing Tracing => (browserCtx ?? throw new ArgumentException("Call Web.Open() first")).Tracing;
+	public Web(
+		string url,
+		DumpContainer logDC,
+		WebOpt? opt = null
+	)
+	{
+		(this.url, Log, this.opt) = (url, logDC, opt ?? new WebOpt());
+	}
 
-	public static async Task<IPage> Open(string url)
+
+	public async Task InitIFN()
+	{
+		if (page != null ^ browserCtx != null) throw new ArgumentException("[Web] Inconsistent state (1)");
+		if (page != null) return;
+		(browserCtx, page) = await WebCreateUtils.Create(url, opt);
+	}
+
+	public async Task Reset()
+	{
+		if (page != null ^ browserCtx != null) throw new ArgumentException("[Web] Inconsistent state (2)");
+		if (browserCtx != null)
+			await browserCtx.DisposeAsync();
+		(browserCtx, page) = await WebCreateUtils.Create(url, opt);
+	}
+
+	public async Task SetOffline(bool isOffline)
+	{
+		await InitIFN();
+		try
+		{
+			await browserCtx!.SetOfflineAsync(isOffline);
+		}
+		catch (Exception ex)
+		{
+			ex.Dump();
+		}
+	}
+
+
+	internal async Task TryRun(Func<Task> action, string name, RetryPolicy? policy)
+	{
+		try
+		{
+			await retrier.Run(
+				action,
+				name,
+				policy ?? RetryPolicy.Default,
+				CancelToken
+			);
+		}
+		finally
+		{
+			OnStatsChanged?.Invoke(retrier.Stats);
+		}
+	}
+
+	internal async Task<T> TryReturn<T>(Func<Task<T>> action, string name, RetryPolicy? policy) where T : class
+	{
+		try
+		{
+			return await retrier.Return(
+				action,
+				name,
+				policy ?? RetryPolicy.Default,
+				CancelToken
+			);
+		}
+		finally
+		{
+			OnStatsChanged?.Invoke(retrier.Stats);
+		}
+	}
+}
+
+
+
+file static class WebCreateUtils
+{
+	public static async Task<(IBrowserContext, IPage)> Create(string url, WebOpt opt)
 	{
 		var playwright = await Playwright.CreateAsync();
-		browserCtx = await playwright.Chromium.LaunchPersistentContextAsync(
-			Consts.ChromeUserDataFolder,
+		var browserCtx = await playwright.Chromium.LaunchPersistentContextAsync(
+			Consts.ChromiumUserDataDir,
 			new BrowserTypeLaunchPersistentContextOptions
 			{
-				Headless = false,
+				Channel = opt.Headless switch
+				{
+					false => null,
+					true => "chromium",
+				},
+				Headless = opt.Headless,
+				Args = [
+					$"--profile-directory={Consts.ChromiumProfileDirectory}",
+				],
+				UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
 			}
 		);
 
-		browserCtx.SetDefaultTimeout(3000);
-		browserCtx.SetDefaultNavigationTimeout(30000);
+		browserCtx.SetDefaultTimeout(opt.DefaultTimeoutMS);
+		browserCtx.SetDefaultNavigationTimeout(opt.DefaultNavigationTimeoutMS);
 
 		IPage page;
 		if (browserCtx.Pages.Count > 0)
@@ -33,6 +143,6 @@ public static class Web
 
 		await page.GotoAsync(url);
 
-		return page;
+		return (browserCtx, page);
 	}
 }

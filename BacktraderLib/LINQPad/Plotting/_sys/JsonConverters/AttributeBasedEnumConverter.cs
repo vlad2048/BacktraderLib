@@ -9,6 +9,7 @@ enum EnumStyle
 {
 	Default,
 	LowerCase,
+	CamelCase,
 	PlusSeparated,
 	DashSeparated,
 }
@@ -25,6 +26,7 @@ sealed class AttributeBasedEnumConverter : JsonConverterFactory
 {
 	static readonly JsonStringEnumConverter DefaultEnumConverter = new();
 	static readonly JsonStringEnumConverter LowerCaseEnumConverter = new(new LowerCaseJsonNamingPolicy());
+	static readonly JsonStringEnumConverter CamelCaseEnumConverter = new(JsonNamingPolicy.CamelCase);
 	static readonly JsonStringEnumConverter PlusSeparatedEnumConverter = new(new CharSeparatedJsonNamingPolicy('+'));
 	static readonly JsonStringEnumConverter DashSeparatedEnumConverter = new(new CharSeparatedJsonNamingPolicy('-'));
 
@@ -38,6 +40,7 @@ sealed class AttributeBasedEnumConverter : JsonConverterFactory
 		{
 			EnumStyle.Default => DefaultEnumConverter,
 			EnumStyle.LowerCase => LowerCaseEnumConverter,
+			EnumStyle.CamelCase => CamelCaseEnumConverter,
 			EnumStyle.PlusSeparated => PlusSeparatedEnumConverter,
 			EnumStyle.DashSeparated => DashSeparatedEnumConverter,
 			_ => throw new ArgumentException("Unknown EnumStyle"),

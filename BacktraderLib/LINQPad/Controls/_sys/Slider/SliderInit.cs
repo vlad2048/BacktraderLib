@@ -9,7 +9,6 @@ static class SliderInit
 	public static void Init()
 	{
 		Util.HtmlHead.AddStyles(ResourceLoader.Load($"{ResourceFolder}.ion.rangeSlider.min.css"));
-		Util.HtmlHead.AddScript(ResourceLoader.Load($"{ResourceFolder}.jquery.min.js"));
 		Util.HtmlHead.AddScript(ResourceLoader.Load($"{ResourceFolder}.ion.rangeSlider.min.js"));
 	}
 }

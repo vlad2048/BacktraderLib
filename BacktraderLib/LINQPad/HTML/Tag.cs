@@ -1,55 +1,109 @@
-﻿using System.Text;
+﻿using System.Reactive;
+using System.Text;
 using BacktraderLib._sys;
-using BacktraderLib._sys.Utils;
+using BaseUtils;
 using LINQPad;
+using RxLib;
 
 namespace BacktraderLib;
 
-public class Tag(string tagName, string? text = null)
+public class Tag
 {
-	public string? Id { get; init; }
+	readonly AsyncSubject<Unit> whenRender = new AsyncSubject<Unit>().D(D);
+	readonly string tagName;
+	readonly string? text;
+
+	public string Id { get; }
+
+	public Tag(string tagName, string? id = null, string? text = null)
+	{
+		(this.tagName, Id, this.text) = (tagName, id ?? IdGen.Make(), text);
+
+
+		var whenRenderEvtName = $"{Id}_OnRender";
+		Events.Listen(whenRenderEvtName, _ =>
+		{
+			whenRender.OnNext(Unit.Default);
+			whenRender.OnCompleted();
+		});
+		JS.Run(
+			"""
+			(async () => {
+				const elt = await window.waitForElement(____0____);
+				window.dispatch(____1____, '');
+			})();
+			""",
+			e => e
+				.JSRepl_Val(0, Id)
+				.JSRepl_Val(1, whenRenderEvtName)
+		);
+	}
+
+
+
+
+
+	public Tag Dyna<T>(IObservable<T>? obs, Func<T, ITagMutator, ITagMutator> action)
+	{
+		if (obs != null)
+			whenRender
+				.CombineLatest(obs)
+				.Select(t => t.Second)
+				.Subscribe(val =>
+				{
+					var mutator = new TagMutator(this);
+					action(val, mutator);
+					JS.RunOn(
+						Id,
+						"""
+						elt => {
+							____0____
+						}
+						""",
+						e => e
+								.JSRepl_Obj(0, mutator.JSCode)
+					);
+				}).D(D);
+		return this;
+	}
+			
+
+
+
 	public string? Class { get; init; }
-	public string[]? Style { get; init; }
-	public Dictionary<string, string> Attributes { get; init; } = [];
+	public string[]? Style { get; set; }
+	public Dictionary<string, string> Attributes { get; init; } = new();
+
+	
+	
+	public Tag AddStyle(params string[] styles)
+	{
+		Style = Style switch
+		{
+			null => styles,
+			not null => Style.ConcatA(styles),
+		};
+		return this;
+	}
 
 	public string OnRenderJS
 	{
-		init
-		{
-			Id ??= IdGen.Make();
-			JS.Run(
+		init =>
+			JS.RunOn(
+				Id,
 				"""
-				(async () => {
-					const elt = await window.waitForElement(____0____);
-					____1____
-				})();
+				elt => {
+					(____0____)(elt);
+				}
 				""",
 				e => e
-					.JSRepl_Val(0, Id)
-					.JSRepl_Obj(1, value)
+					.JSRepl_Obj(0, value)
 			);
-		}
 	}
 
 	public Action OnRender
 	{
-		init
-		{
-			Id ??= IdGen.Make();
-			var evtName = $"{Id}_OnRender";
-			Events.Listen(evtName, _ => value());
-			JS.Run(
-				"""
-				(async () => {
-					const elt = await window.waitForElement(____0____);
-					window.dispatch(____1____, '');
-				})();
-				""",
-				e => e
-					.JSRepl_Val(0, Id)
-					.JSRepl_Val(1, evtName)
-			);
-		}
+		init => whenRender.Subscribe(_ => value());
 	}
 
 	public Action? OnClick
@@ -57,7 +111,6 @@ public class Tag(string tagName, string? text = null)
 		init
 		{
 			if (value == null) return;
-			Id ??= IdGen.Make();
 			var evtName = $"{Id}_OnClick";
 			Events.ListenFast(evtName, value);
 			JS.Run(
@@ -76,6 +129,8 @@ public class Tag(string tagName, string? text = null)
 		}
 	}
 
+
+
 	public Tag[] Kids { get; init; } = [];
 
 
@@ -89,16 +144,28 @@ public class Tag(string tagName, string? text = null)
 	public override string ToString()
 	{
 		var sb = new StringBuilder();
+
 		sb.Append($"<{tagName}");
-		if (Id != null)
-			sb.Append($" id='{Id}'");
+
+		sb.Append($" id='{Id}'");
+
 		if (Class != null)
 			sb.Append($" class='{Class}'");
+
 		if (Style != null)
 			sb.Append($" style='{string.Join(';', Style)}'");
-		if (Attributes != null)
-			foreach (var (key, val) in Attributes)
+
+		foreach (var (key, val) in Attributes)
+		{
+			if (val.Equals("true", StringComparison.OrdinalIgnoreCase))
+				sb.Append($" {key}");
+			else if (val.Equals("false", StringComparison.OrdinalIgnoreCase))
+			{
+			}
+			else
 				sb.Append($" {key}='{val}'");
+		}
+
 		sb.Append(">");
 
 		foreach (var kid in Kids)

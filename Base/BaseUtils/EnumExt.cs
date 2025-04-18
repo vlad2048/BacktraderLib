@@ -24,17 +24,20 @@ public static class EnumExt
 	public static T[] SelectManyA<T>(this IEnumerable<IEnumerable<T>> source) => source.SelectMany(e => e).ToArray();
 	public static U[] SelectManyA<T, U>(this IEnumerable<T> source, Func<T, IEnumerable<U>> fun) => source.SelectMany(fun).ToArray();
 	public static U[] SelectManyA<T, U>(this IEnumerable<T> source, Func<T, int, IEnumerable<U>> fun) => source.SelectMany(fun).ToArray();
-	//public static T[] ConcatA<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Concat(second).ToArray();
+	public static T[] ConcatA<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Concat(second).ToArray();
 	public static T[] ConcatDistinctA<T>(this IEnumerable<T> first, IEnumerable<T> second) => first.Concat(second).Distinct().ToArray();
 	public static U[] SelectDistinctA<T, U>(this IEnumerable<T> source, Func<T, U> fun) => source.Select(fun).Distinct().ToArray();
 	public static bool IsSame<T>(this IReadOnlyCollection<T> xs, IReadOnlyCollection<T> ys) => xs.Count == ys.Count && xs.Zip(ys).All(t => Equals(t.First, t.Second));
 
-	public static int IdxOf<T>(this IEnumerable<T> source, T elt)
+	public static T[] UniquifyBy<T, K>(this IEnumerable<T> source, Func<T, K> keyFun) => source.GroupBy(keyFun).SelectA(e => e.First());
+
+	public static int IdxOf<T>(this IEnumerable<T> source, T elt, int? idxStart = null)
 	{
 		var idx = 0;
 		foreach (var item in source)
 		{
-			if (item!.Equals(elt))
+			var startReached = !idxStart.HasValue || idx >= idxStart.Value;
+			if (startReached && item!.Equals(elt))
 				return idx;
 			idx++;
 		}

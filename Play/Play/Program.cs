@@ -1,4 +1,4 @@
-﻿using Feed.SEC;
+﻿using LINQPad;
 
 namespace Play;
 
@@ -6,6 +6,7 @@ static class Program
 {
 	static void Main()
 	{
-		API.Fetcher.Run();
+		"Heya".Dump();
+		Util.RawHtml("<h1>Big</h1>").Dump();
 	}
 }

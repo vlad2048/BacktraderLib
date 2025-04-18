@@ -6,7 +6,7 @@ public static class API
 {
 	public static void SetTwelveDataApiKey(string apiKey) => TwelveDataSymbolsGetter.ApiKey = apiKey;
 
-	public static UniverseSymbol[] GetUniverseConstituents(IUniverse universe) => UniverseConstituentCleaner.GetSymbols(universe);
+	public static UniverseSymbol[] LoadUniverse(IUniverse universe) => UniverseConstituentCleaner.GetSymbols(universe);
 }
 
 

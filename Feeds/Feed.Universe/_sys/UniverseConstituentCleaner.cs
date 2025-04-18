@@ -41,39 +41,16 @@ public static class UniverseConstituentCleaner
 		var exchanges = universe.GetExchanges().ToHashSet(e => $"{e}");
 		var countries = universe.GetCountries().ToHashSet();
 
-		var twelvedataSymbols = TwelveDataSymbolsGetter.All
+		var symsTwd = TwelveDataSymbolsGetter.All
 			.Where(e => e.Type == "Common Stock")
 			.Where(e => exchanges.Contains(e.Exchange))
 			.Where(e => countries.Contains(e.Country))
 			.ToDictionary(e => e.Symbol);
 
-		var stockanalysisSymbols = StockAnalysisUniverseSymbolsGetter.Scrape(universe);
+		var symsSta = StockAnalysisUniverseSymbolsGetter.Scrape(universe);
 
-		var tups = stockanalysisSymbols
-			.Where(e => twelvedataSymbols.ContainsKey(e.Symbol))
-			.SelectA(e => (e, twelvedataSymbols[e.Symbol]));
-
-		return tups;
-
-		/*return stockanalysisSymbols
-			.Where(e => twelvedataSymbols.ContainsKey(e.Symbol))
-			.SelectA(e =>
-			{
-				var f = twelvedataSymbols[e.Symbol];
-				return new UniverseSymbol(
-					f.Symbol,
-					f.Country,
-					f.Name,
-					f.Currency,
-					f.Exchange,
-					f.MicCode,
-					f.Type,
-					f.FigiCode,
-					f.CfiCode,
-
-					e.MarketCap,
-					e.Revenue
-				);
-			});*/
+		return symsSta
+			.Where(e => symsTwd.ContainsKey(e.Symbol))
+			.SelectA(e => (e, symsTwd[e.Symbol]));
 	}
 }

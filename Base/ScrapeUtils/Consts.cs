@@ -2,8 +2,6 @@
 
 static class Consts
 {
-	public const string ChromeUserDataFolder = @"C:\Users\admin\AppData\Local\Google\Chrome\User Data";
-
-	public const string ScriptClassName = "WebScript.Script";
-	public const string ScriptMethodName = "Main";
+	public const string ChromiumUserDataDir = @"C:\Users\admin\AppData\Local\Chromium\User Data";
+	public const string ChromiumProfileDirectory = "Trading212Scraping";
 }

@@ -10,7 +10,7 @@ public static partial class Ctrls
 	{
 		if (Δsource.V.Length == 0) throw new ArgumentException("Empty array not supported");
 		var Δrx = Var.Make(Δsource.V[0]);
-		var ui = new SelectBox(SelectBoxKind.ListBox, Δsource.V.SelectA(e => (object)$"{e}"), 0, c => Δrx.V = Δsource.V[c.SelectedIndex]);
+		var ui = new SelectBox(SelectBoxKind.DropDown, Δsource.V.SelectA(e => (object)$"{e}"), 0, c => Δrx.V = Δsource.V[c.SelectedIndex]);
 		Δsource.Subscribe(arr =>
 		{
 			if (arr.Length == 0) throw new ArgumentException("Empty array not supported");

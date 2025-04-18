@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RxLib\RxLib.csproj" />
     <ProjectReference Include="..\TreeLib\TreeLib.csproj" />
   </ItemGroup>
 
