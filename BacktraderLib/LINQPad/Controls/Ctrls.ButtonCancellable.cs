@@ -1,4 +1,4 @@
-﻿using LINQPad;
+﻿using BacktraderLib._sys;
 using RxLib;
 
 namespace BacktraderLib;
@@ -41,7 +41,7 @@ public static partial class Ctrls
 			Obs.CombineLatest(sourcer.ΔIsRunning, ΔenableOn, (isRunning, enableOn) => (isRunning, enableOn)),
 			(v, t) => (v.isRunning, v.enableOn) switch
 			{
-				(true, _) => t.SetText("Cancel").SetEnabled(true).SetClass("button-cancel"),
+				(true, _) => t.SetText("Cancel").SetEnabled(true).SetClass(CtrlsClasses.Ctrl_Button_Cancel),
 				(false, true) => t.SetText(name).SetEnabled(true).SetClass(""),
 				(false, false) => t.SetText(name).SetEnabled(false).SetClass(""),
 			}
@@ -86,17 +86,4 @@ public static partial class Ctrls
 			ΔisRunning.V = false;
 		}
 	}
-
-
-	internal static void Init_ButtonCancellable() => Util.HtmlHead.AddStyles(
-		"""
-		.table-controls button.button-cancel {
-		    border: 1px solid hsl(360, 48%, 28%);
-		    background: linear-gradient(to bottom, hsl(360, 48%, 48%) 0%, hsl(360, 48%, 28%) 100%);
-		}
-		.table-controls button.button-cancel:hover {
-		    border: 1px solid hsl(360, 48%, 38%);
-		    background: linear-gradient(to bottom, hsl(360, 48%, 58%) 0%, hsl(360, 48%, 38%) 100%);
-		}
-		""");
 }

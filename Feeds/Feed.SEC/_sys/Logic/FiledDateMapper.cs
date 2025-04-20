@@ -1,4 +1,5 @@
 ﻿using BaseUtils;
+using LINQPad.FSharpExtensions;
 
 namespace Feed.SEC._sys.Logic;
 
@@ -17,15 +18,21 @@ static class FiledDateMapper
 		var list = new List<string>();
 		var queue = new Queue<string>();
 		queue.Enqueue(company);
+		var done = new HashSet<string>();
 		while (queue.TryDequeue(out var cur))
 		{
+			if (!File.Exists(Consts.Group.CompanyZipFile(cur))) continue;
 			list.Add(cur);
+			done.Add(cur);
 			var formers = API.Rows.Group.Load<SubRow>(cur)
 				.Where(e => e.Former != null)
 				.Select(e => e.Former!)
 				.Distinct();
 			foreach (var former in formers)
-				queue.Enqueue(former);
+			{
+				if (!done.Contains(former))
+					queue.Enqueue(former);
+			}
 		}
 
 		return [.. list];
@@ -39,9 +46,21 @@ static class FiledDateMapper
 			.OrderBy(g => g.Key)
 			.ToDictionary(
 				g => g.Key,
-				g => g.Select(e => e.Filed).Distinct().SingleOrDefault()
+				//g => g.Select(e => e.Filed).Distinct().SingleOrDefaultDiag(g)
+				g => g.Select(e => e.Filed).Distinct().MinBy(e => e)
 			);
 
+	static T SingleOrDefaultDiag<T, S>(this IEnumerable<T> source, IEnumerable<S> orig)
+	{
+		var arr = source.ToArray();
+		if (arr.Length == 1)
+			return arr[0];
+		if (arr.Length == 0)
+			throw new ArgumentException("Impossible (SingleOrDefaultDiag)");
+
+		orig.Dump();
+		throw new ArgumentException("SingleOrDefaultDiag check failed");
+	}
 
 	static IReadOnlyDictionary<Quarter, DateOnly> Merge(this IEnumerable<IReadOnlyDictionary<Quarter, DateOnly>> source)
 	{

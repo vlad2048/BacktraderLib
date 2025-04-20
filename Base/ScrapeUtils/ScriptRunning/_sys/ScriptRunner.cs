@@ -49,7 +49,9 @@ static class ScriptRunner
 		global using LINQPad;
 		
 		global using ScrapeUtils;
-		
+
+		global using ILoc = System.Func<Microsoft.Playwright.IPage, Microsoft.Playwright.ILocator>;
+		global using ISubLoc = System.Func<Microsoft.Playwright.ILocator, Microsoft.Playwright.ILocator>;
 		
 		""";
 

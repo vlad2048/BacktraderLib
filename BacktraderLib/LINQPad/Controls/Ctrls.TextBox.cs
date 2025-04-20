@@ -5,8 +5,9 @@ namespace BacktraderLib;
 
 public static partial class Ctrls
 {
-	public static (IRoVar<bool>, Tag) CheckBox(bool value)
+	public static (IRoVar<string>, Tag) TextBox(string? value = null, string? placeholder = null)
 	{
+		value ??= string.Empty;
 		var Δrx = Var.Make(value);
 
 		var id = IdGen.Make();
@@ -14,9 +15,9 @@ public static partial class Ctrls
 		{
 			Attributes =
 			{
-				{ "type", "checkbox" },
-				//{ "name", id },
-				{ "checked", $"{value}" },
+				{ "type", "text" },
+				{ "value", value },
+				{ "placeholder", placeholder },
 			},
 			OnRenderJS = JS.Fmt(
 				"""
@@ -30,20 +31,14 @@ public static partial class Ctrls
 		{
 			var str = JS.Return(
 				"""
-				document.getElementById(____0____).checked;
+				document.getElementById(____0____).value;
 				""",
 				e => e
 					.JSRepl_Val(0, id)
 			);
-			Δrx.V = bool.Parse(str);
+			Δrx.V = str;
 		});
 
 		return (Δrx, ui);
-
-		/*var ui = new CheckBox(name ?? string.Empty, value, c => Δrx.V = c.Checked)
-		{
-			CssClass = CtrlsClasses.WidgetMain,
-		}.ToTag();
-		return (Δrx, ui);*/
 	}
 }

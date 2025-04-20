@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using BacktraderLib._sys.JsonConverters;
+using LINQPad;
 using RxLib;
 
 namespace BacktraderLib._sys.Tabulator;
@@ -15,7 +16,7 @@ static class Tabulator
 		Action<int>? onSelect
 	)
 	{
-		if (Δitems.V.Length == 0) throw new ArgumentException("Empty array not supported");
+		if (onSelect != null && Δitems.V.Length == 0) throw new ArgumentException("Empty array not supported");
 
 		var id = IdGen.Make();
 		var idSearch = $"{id}-search";
@@ -81,7 +82,7 @@ static class Tabulator
 					},
 					Style =
 					[
-						//"width: 100%",
+						"width: 100%",
 					],
 				}
 			);
@@ -96,7 +97,7 @@ static class Tabulator
 		var tag =
 			new Tag("div")
 			{
-				Class = TabulatorInit.Classes.TableWrapper,
+				Class = CtrlsClasses.TableWrapper,
 				Style = opts.Width.HasValue
 					?
 					[
@@ -111,7 +112,7 @@ static class Tabulator
 						[
 							new Tag("div")
 							{
-								Class = TabulatorInit.Classes.TableControls,
+								Class = $"{CtrlsClasses.HorzCtrlRow} {CtrlsClasses.TableControls}",
 								Kids = [..tableCtrls],
 							},
 						]
@@ -119,16 +120,7 @@ static class Tabulator
 
 					new Tag("div", id)
 					{
-						OnRenderJS =
-							JS.Fmt(
-								"""
-								elt => {
-									____0____
-								}
-								""",
-								e => e
-									.JSRepl_Obj(0, createJS)
-							),
+						OnRenderJS = createJS,
 					},
 				],
 			};
@@ -191,6 +183,7 @@ static class Tabulator
 			{
 				title = t.First.Title ?? t.Second.Name,
 				field = t.Second.Name,
+				formatter = $"TabulatorColumnFormatter.{t.First.Formatter}",
 			})
 			.Ser();
 
@@ -202,6 +195,7 @@ static class Tabulator
 				{
 					pagination: true,
 					paginationSize: ____0____,
+					paginationButtonCount: 2,
 					paginationCounter: 'rows',
 				}
 				""",
@@ -251,13 +245,14 @@ static class Tabulator
 			);
 			""",
 			e => e
-				//.JSRepl_Var(0, id)
 				.JSRepl_Val(1, opts.Height)
 				.JSRepl_Var(2, opts.Layout.HasValue ? JsonEnumUtils.Ser(opts.Layout.Value) : "undefined")
 				.JSRepl_Obj(3, columnsCfg)
 				.JSRepl_Obj(4, paginationCfg)
 				.JSRepl_Obj(5, selectionCfg)
 				.JSRepl_Obj(6, data)
+				.Replace("\"TabulatorColumnFormatter.None\"", "undefined")
+				.Replace("\"TabulatorColumnFormatter.Money\"", "function(cell){ return tabulator_formatMoney(cell.getValue()); }")
 		);
 	}
 

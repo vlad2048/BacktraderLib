@@ -35,10 +35,11 @@ public sealed class TabulatorOptions<T>
 
 	public TabulatorOptions<T> AddColumn(
 		Expression<Func<T, object>> expr,
-		string? title = null
+		string? title = null,
+		TabulatorColumnFormatter formatter = TabulatorColumnFormatter.None
 	)
 	{
-		Columns.Add(new TabulatorColumn<T>(expr, title));
+		Columns.Add(new TabulatorColumn<T>(expr, title, formatter));
 		return this;
 	}
 
@@ -65,10 +66,16 @@ public enum TabulatorLayout
 
 
 
+public enum TabulatorColumnFormatter
+{
+	None,
+	Money,
+}
 
 public sealed record TabulatorColumn<T>(
 	Expression<Func<T, object>> Expr,
-	string? Title
+	string? Title,
+	TabulatorColumnFormatter Formatter
 );
 
 public sealed record TabulatorSearchField<T>(

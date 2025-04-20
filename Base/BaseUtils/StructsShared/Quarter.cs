@@ -18,7 +18,8 @@ public sealed record Quarter(int Year, QNum Q) : IComparable<Quarter>
 	public static readonly Quarter MaxValue = new(2025, QNum.Q4);
 	public static readonly Quarter[] All = MakeAll();
 
-	public override string ToString() => $"{Q}'{$"{Year}"[2..]}";
+	//public override string ToString() => $"{Q}'{$"{Year}"[2..]}";
+	public override string ToString() => $"{Year} {Q}";
 	public object ToDump() => ToString();
 
 

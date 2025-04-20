@@ -72,7 +72,7 @@ public class Tag
 
 	public string? Class { get; init; }
 	public string[]? Style { get; set; }
-	public Dictionary<string, string> Attributes { get; init; } = new();
+	public Dictionary<string, string?> Attributes { get; init; } = new();
 
 	
 	
@@ -93,7 +93,7 @@ public class Tag
 				Id,
 				"""
 				elt => {
-					(____0____)(elt);
+					____0____
 				}
 				""",
 				e => e
@@ -157,22 +157,29 @@ public class Tag
 
 		foreach (var (key, val) in Attributes)
 		{
-			if (val.Equals("true", StringComparison.OrdinalIgnoreCase))
+			if (val == null)
+			{
+			}
+			else if (val.Equals("true", StringComparison.OrdinalIgnoreCase))
+			{
 				sb.Append($" {key}");
+			}
 			else if (val.Equals("false", StringComparison.OrdinalIgnoreCase))
 			{
 			}
 			else
+			{
 				sb.Append($" {key}='{val}'");
+			}
 		}
 
 		sb.Append(">");
 
-		foreach (var kid in Kids)
-			sb.Append($"{kid}");
-
 		if (text != null)
 			sb.Append(text);
+
+		foreach (var kid in Kids)
+			sb.Append($"{kid}");
 
 		sb.Append($"</{tagName}>");
 		return sb.ToString();

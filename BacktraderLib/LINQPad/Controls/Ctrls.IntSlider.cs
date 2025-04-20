@@ -19,28 +19,23 @@ public static partial class Ctrls
 			max,
 			1,
 			init,
-			CtrlsClasses.WidgetMain,
+			CtrlsClasses.Ctrl_Slider,
 			e => Δrx.V = e
 		);
 		return (Δrx, ui.WithLabel(name));
 	}
 
 
-	static Tag WithLabel(this Tag tag, string? name) =>
+	/*static Tag WithLabel(this Tag tag, string? name) =>
 		name switch
 		{
 			not null =>
-				new("div")
-				{
-					Class = CtrlsClasses.Widget,
-					Kids =
-					[
-						new Tag("label", null, name),
-						tag,
-					],
-				},
+				horzCtrlRow([
+					new Tag("label", null, name),
+					tag,
+				]),
 			null => tag,
-		};
+		};*/
 
 
 

@@ -13,4 +13,11 @@ public static class StringExt
 		_ when str.Length <= lng => str,
 		_ => str[..lng]
 	};
+
+	public static string RemovePrefix(this string s, string prefix) =>
+		s.StartsWith(prefix) switch
+		{
+			true => s[prefix.Length..],
+			false => throw new ArgumentException($"Missing prefix '{prefix}' in '{s}'"),
+		};
 }

@@ -1,6 +1,7 @@
 ﻿using LINQPad;
 using RxLib;
 using BaseUtils;
+using BacktraderLib._sys;
 
 namespace BacktraderLib;
 
@@ -15,11 +16,6 @@ public static partial class Ctrls
 		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		dispMap?.D(D);
 		dispMap = new Dictionary<string, IDisposable>();
-		Util.HtmlHead.AddStyles("""
-			.log > * {
-				white-space: nowrap;
-			}
-		""");
 	}
 	
 	public static (DumpContainer, Tag) Log()
@@ -27,13 +23,7 @@ public static partial class Ctrls
 		var logDC = new DumpContainer();
 		var logUI = new Tag("div")
 		{
-			Class = "log",
-			Style =
-			[
-				"overflow: auto",
-				"width: 100%",
-				"background-color: #121212",
-			],
+			Class = CtrlsClasses.Ctrl_Log,
 			Kids =
 			[
 				logDC.ToTag().AddStyle([

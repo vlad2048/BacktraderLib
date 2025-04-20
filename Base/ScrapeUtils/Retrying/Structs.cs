@@ -50,22 +50,28 @@ public sealed record SpotStats(
 	int[] TryCounts,
 	int Total,
 	int Failures
-);
+)
+{
+	[JsonIgnore]
+	public bool HasError => TryCounts.Skip(1).Any(e => e > 0) || Failures > 0;
+}
 
 public sealed record FullStats(
 	Dictionary<string, SpotStats> Map
 )
 {
-	public object ToDump() => Map.SelectA(kv => new
-	{
-		Name = kv.Key,
-		Succ = kv.Value.TryCounts[0],
-		Fail = kv.Value.Failures,
-		Total = kv.Value.Total,
-		Retries = kv.Value.TryCounts.Skip(1).JoinText(","),
-		ExceptionsRetry = kv.Value.ExceptionsRetry.Fmt(),
-		ExceptionsFatal = kv.Value.ExceptionsFatal.Fmt(),
-	});
+	public object ToDump() => Map
+		.Where(kv => kv.Value.HasError)
+		.SelectA(kv => new
+		{
+			Name = kv.Key,
+			Succ = kv.Value.TryCounts[0],
+			Fail = kv.Value.Failures,
+			Total = kv.Value.Total,
+			Retries = kv.Value.TryCounts.Skip(1).JoinText(","),
+			ExceptionsRetry = kv.Value.ExceptionsRetry.Fmt(),
+			ExceptionsFatal = kv.Value.ExceptionsFatal.Fmt(),
+		});
 }
 
 

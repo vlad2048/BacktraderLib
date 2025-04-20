@@ -9,26 +9,6 @@ static class Reqs
 		req.Url.Contains("algolia");
 
 
-	/*public static Func<IRequest, bool> Report(ReportType type) => req =>
-		req.Method == "GET" &&
-		type switch
-		{
-			ReportType.FinancialsIncomeStatement => req.Url.Is("financials/income-statement"),
-			ReportType.FinancialsBalanceSheet => req.Url.Is("financials/balance-sheet"),
-			ReportType.FinancialsCashFlow => req.Url.Is("financials/cash-flow"),
-
-			ReportType.StatsValuation => req.Url.Is("stats/valuation"),
-			ReportType.StatsLiquidity => req.Url.Is("stats/liquidity"),
-			ReportType.StatsEfficiency => req.Url.Is("stats/efficiency"),
-			ReportType.StatsProfitability => req.Url.Is("stats/profitability"),
-			ReportType.StatsLeverage => req.Url.Is("stats/leverage"),
-			ReportType.StatsPerShare => req.Url.Is("stats/per-share"),
-			ReportType.StatsCashFlow => req.Url.Is("stats/cash-flow"),
-			ReportType.StatsGrowth => req.Url.Is("stats/growth"),
-
-			_ => throw new ArgumentException($"Unknown ReportType: {type}"),
-		};*/
-
 	public static ReportType? GetReportType(IRequest req)
 	{
 		if (req.Method != "GET") return null;
