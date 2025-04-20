@@ -13,8 +13,7 @@ public static partial class Ctrls
 			async cancelToken =>
 			{
 				web.Log.UpdateContent(Util.RawHtml($"<h2>Script run {runCount++}</h2>"));
-				using var _ = web.UseCancelToken(cancelToken);
-				await ScriptWatcher.Run(ScriptSource.QuerySection, web);
+				await ScriptWatcher.Run(ScriptSource.QuerySection, web, cancelToken);
 			}
 		);
 }

@@ -93,7 +93,7 @@ file static class ExceptionFmt
 
 
 
-interface IRetryResult;
+public interface IRetryResult;
 sealed record SuccessRetryResult(int Tries) : IRetryResult;
 sealed record FailureRetryResult(Exception Ex) : IRetryResult;
 static class RetryResult
@@ -103,7 +103,7 @@ static class RetryResult
 }
 
 
-sealed class SpotStatsKeeper
+public sealed class SpotStatsKeeper
 {
 	readonly List<Exception> exceptionsRetry = [];
 	readonly List<Exception> exceptionsFatal = [];
@@ -151,7 +151,7 @@ sealed class SpotStatsKeeper
 }
 
 
-sealed class FullStatsKeeper
+public sealed class FullStatsKeeper
 {
 	readonly Dictionary<string, SpotStatsKeeper> map = new();
 
@@ -174,4 +174,6 @@ sealed class FullStatsKeeper
 	}
 
 	public FullStats Compile() => new(map.ToDictionary(kv => kv.Key, kv => kv.Value.Compile()));
+
+	public object ToDump() => Compile();
 }

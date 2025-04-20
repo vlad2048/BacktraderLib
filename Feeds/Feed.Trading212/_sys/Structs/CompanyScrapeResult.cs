@@ -2,8 +2,12 @@
 
 namespace Feed.Trading212._sys.Structs;
 
+sealed record CompanyScrapeResult(
+	Dictionary<ReportType, SortedDictionary<Quarter, RefField[]>> Reports,
+	ScrapeError? Error
+);
 
-interface IScrapeResult;
+/*interface IScrapeResult;
 interface IResultScrapeResult : IScrapeResult
 {
 	Dictionary<ReportType, SortedDictionary<Quarter, RefField[]>> Reports { get; }
@@ -61,7 +65,7 @@ static class ScrapeResultUtils
 			NoInternetScrapeResult => ScrapeStatus.NoInternet,
 			_ => throw new ArgumentException($"Invalid(3) ScrapeResult: {result.GetType().FullName}"),
 		};
-}
+}*/
 
 
 static class ReportMerger

@@ -72,6 +72,12 @@ public static partial class Ctrls
 
 			if (ex.IsCancel()) return;
 
+			// Feed.Trading212
+			if (exName == "ScrapeException") return;
+
+			// Feed.Trading212 RateLimit
+			if (exName == "JsonReaderException" && ex.Message.StartsWith("'<' is an invalid start of a value.")) return;
+
 
 			if (dispMap.ContainsKey(exName))
 			{

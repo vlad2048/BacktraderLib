@@ -4,13 +4,7 @@ namespace BaseUtils;
 
 public static class ExprUtils
 {
-	public static (string, Func<T, object>) GetNameAndGetter<T>(Expression<Func<T, object>> expr) =>
-	(
-		GetName(expr),
-		expr.Compile()
-	);
-
-	static string GetName<T>(Expression<Func<T, object>> expr)
+	public static string GetName<T>(Expression<Func<T, object>> expr)
 	{
 		var lambda = (LambdaExpression)expr;
 		var p = lambda.Parameters.Single();
@@ -22,6 +16,8 @@ public static class ExprUtils
 
 		return visitor.Name;
 	}
+
+	public static Func<T, object> GetGetter<T>(Expression<Func<T, object>> expr) => expr.Compile();
 
 	sealed class NameVisitor(ParameterExpression p) : ExpressionVisitor
 	{

@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using BacktraderLib._sys.JsonConverters;
-using LINQPad;
 using RxLib;
 
 namespace BacktraderLib._sys.Tabulator;
@@ -20,8 +19,8 @@ static class Tabulator
 
 		var id = IdGen.Make();
 		var idSearch = $"{id}-search";
-		var props = JsonUtils.CompileProps(opts.Columns.Select(e => e.Expr));
-		var createJS = MakeCreateJS(/*id, */Δitems.V, opts, props, true);
+		var props = JsonUtils.CompileProps(opts.Columns);
+		var createJS = MakeCreateJS(Δitems.V, opts, props, true);
 
 		if (onSelect != null)
 		{
@@ -47,7 +46,7 @@ static class Tabulator
 		if (opts.Searches.Any())
 		{
 			var searchCodeJS = opts.Searches
-				.Select(e => ExprUtils.GetNameAndGetter(e.Expr).Item1)
+				.Select(e => ExprUtils.GetName(e.Expr))
 				.Select(e => $$"""${row.{{e}}}""")
 				.JoinText(" ");
 			createJS += JS.Fmt(
@@ -171,7 +170,6 @@ static class Tabulator
 
 
 	static string MakeCreateJS<T>(
-		//string id,
 		T[] items,
 		TabulatorOptions<T> opts,
 		Prop<T>[] props,
@@ -271,11 +269,12 @@ sealed record Prop<T>(string Name, Func<T, object> Get);
 
 file static class JsonUtils
 {
-	public static Prop<T>[] CompileProps<T>(IEnumerable<Expression<Func<T, object>>> exprs) =>
-		exprs
+	public static Prop<T>[] CompileProps<T>(IEnumerable<TabulatorColumn<T>> cols) =>
+		cols
 			.SelectA(e =>
 			{
-				var (name, get) = ExprUtils.GetNameAndGetter(e);
+				var name = e.Title ?? ExprUtils.GetName(e.Expr);
+				var get = ExprUtils.GetGetter(e.Expr);
 				if (name == "id")
 					throw new ArgumentException("Column name 'id' is reserved");
 				return new Prop<T>(name, get);

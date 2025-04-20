@@ -15,18 +15,18 @@ sealed class DataFiller(ScrapeOpt opt)
 	readonly ConcurrentDictionary<ReportType, ConcurrentDictionary<Quarter, RefField[]>> reports = new();
 
 	
-	readonly Lock lockException = new();
-	ScrapeException? exception;
-	void ExceptionSet(ScrapeException ex)
+	readonly Lock lockError = new();
+	ScrapeError? error;
+	void ErrorSet(ScrapeError error_)
 	{
-		lock (lockException)
-			exception = ex;
+		lock (lockError)
+			error = error_;
 	}
-	bool ExceptionIsSet()
+	bool ErrorIsSet()
 	{
 		bool res;
-		lock (lockException)
-			res = exception != null;
+		lock (lockError)
+			res = error != null;
 		return res;
 	}
 	
@@ -34,9 +34,12 @@ sealed class DataFiller(ScrapeOpt opt)
 	static bool isInvalidRequestWritten;
 
 
+	public Dictionary<ReportType, SortedDictionary<Quarter, RefField[]>> Reports => reports.ToDictionary(kv => kv.Key, kv => kv.Value.ToSortedDictionary());
+
+
 	public void OnRequestFinished(object? _, IRequest req)
 	{
-		if (ExceptionIsSet()) return;
+		if (ErrorIsSet()) return;
 
 		Task.Run(async () =>
 		{
@@ -48,7 +51,7 @@ sealed class DataFiller(ScrapeOpt opt)
 			}
 			catch (Exception ex)
 			{
-				ExceptionSet(ScrapeException.UnexpectedRequestException(ex));
+				ErrorSet(ScrapeError.UnexpectedRequestException(ex));
 				if (res != null)
 				{
 					try
@@ -66,12 +69,12 @@ sealed class DataFiller(ScrapeOpt opt)
 	}
 
 
-	public void ExceptionThrowIFN()
+	public void ErrorThrowIFN()
 	{
-		lock (lockException)
+		lock (lockError)
 		{
-			if (exception != null)
-				throw exception;
+			if (error != null)
+				throw new ScrapeException(error);
 		}
 	}
 
@@ -81,11 +84,6 @@ sealed class DataFiller(ScrapeOpt opt)
 		true => set_.ToHashSet(e => e.Key),
 		false => [],
 	};
-
-
-	public Dictionary<ReportType, SortedDictionary<Quarter, RefField[]>> GetReports() => reports.ToDictionary(kv => kv.Key, kv => kv.Value.ToSortedDictionary());
-
-
 
 
 
@@ -133,7 +131,7 @@ sealed class DataFiller(ScrapeOpt opt)
 
 			if (resTxt.Contains("You do not have access to trading212.com"))
 			{
-				ExceptionSet(ScrapeException.RateLimit);
+				ErrorSet(ScrapeError.RateLimit);
 				return null;
 			}
 			else

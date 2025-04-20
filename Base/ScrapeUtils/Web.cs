@@ -1,5 +1,4 @@
-﻿using System.Reactive.Disposables;
-using LINQPad;
+﻿using LINQPad;
 using Microsoft.Playwright;
 
 namespace ScrapeUtils;
@@ -15,23 +14,15 @@ public sealed class Web : IDisposable
 {
 	readonly string url;
 	readonly WebOpt opt;
-	readonly Retrier retrier = new();
 	IBrowserContext? browserCtx;
 	IPage? page;
-	CancellationToken? cancelToken;
 
 	public void Dispose() => browserCtx?.DisposeAsync();
 
 	public IPage Page => page ?? throw new ArgumentException("Call Web.EnsurePageIsReady() first");
 	public DumpContainer Log { get; }
-	public CancellationToken CancelToken => cancelToken ?? CancellationToken.None;
-	public IDisposable UseCancelToken(CancellationToken cancelToken_)
-	{
-		cancelToken = cancelToken_;
-		return Disposable.Create(() => cancelToken = null);
-	}
-
-	public event Action<FullStats>? OnStatsChanged;
+	public CancellationToken? CancelToken { get; set; }
+	public FullStatsKeeper? Stats { get; set; }
 
 
 	public Web(
@@ -73,39 +64,23 @@ public sealed class Web : IDisposable
 	}
 
 
-	internal async Task TryRun(Func<Task> action, string name, RetryPolicy? policy)
-	{
-		try
-		{
-			await retrier.Run(
-				action,
-				name,
-				policy ?? RetryPolicy.Default,
-				CancelToken
-			);
-		}
-		finally
-		{
-			OnStatsChanged?.Invoke(retrier.Stats);
-		}
-	}
+	internal async Task TryRun(Func<Task> action, string name, RetryPolicy? policy) =>
+		await Retrier.Run(
+			action,
+			name,
+			policy ?? RetryPolicy.Default,
+			CancelToken ?? CancellationToken.None,
+			Stats
+		);
 
-	internal async Task<T> TryReturn<T>(Func<Task<T>> action, string name, RetryPolicy? policy) where T : class
-	{
-		try
-		{
-			return await retrier.Return(
-				action,
-				name,
-				policy ?? RetryPolicy.Default,
-				CancelToken
-			);
-		}
-		finally
-		{
-			OnStatsChanged?.Invoke(retrier.Stats);
-		}
-	}
+	internal async Task<T> TryReturn<T>(Func<Task<T>> action, string name, RetryPolicy? policy) where T : class =>
+		await Retrier.Return(
+			action,
+			name,
+			policy ?? RetryPolicy.Default,
+			CancelToken ?? CancellationToken.None,
+			Stats
+		);
 }
 
 

@@ -2,23 +2,24 @@
 
 namespace ScrapeUtils;
 
-sealed class Retrier
+static class Retrier
 {
-	readonly FullStatsKeeper stats = new();
-
-	public FullStats Stats => stats.Compile();
-
-	public async Task Run(
+	public static async Task Run(
 		Func<Task> action,
 		string name,
 		RetryPolicy policy,
-		CancellationToken cancelToken
+		CancellationToken cancelToken,
+		FullStatsKeeper? stats
 	)
 	{
 
-		var keeper = stats.GetSpotsKeeper(name, policy);
-		var result = await RunInternal(policy, action, keeper.TrackRetryException, cancelToken);
-		stats.TrackResult(name, policy, result);
+		Action<Exception> trackRetryException = stats switch
+		{
+			not null => stats.GetSpotsKeeper(name, policy).TrackRetryException,
+			null => _ => { },
+		};
+		var result = await RunInternal(policy, action, trackRetryException, cancelToken);
+		stats?.TrackResult(name, policy, result);
 		if (result is FailureRetryResult { Ex: var ex })
 			throw ex;
 	}
@@ -70,17 +71,23 @@ sealed class Retrier
 
 
 
-	public async Task<T> Return<T>(
+	public static async Task<T> Return<T>(
 		Func<Task<T>> action,
 		string name,
 		RetryPolicy policy,
-		CancellationToken cancelToken
+		CancellationToken cancelToken,
+		FullStatsKeeper? stats
 	) where T : class
 	{
 
-		var keeper = stats.GetSpotsKeeper(name, policy);
-		var (result, resultValue) = await ReturnInternal(policy, action, keeper.TrackRetryException, cancelToken);
-		stats.TrackResult(name, policy, result);
+		Action<Exception> trackRetryException = stats switch
+		{
+			not null => stats.GetSpotsKeeper(name, policy).TrackRetryException,
+			null => _ => { }
+			,
+		};
+		var (result, resultValue) = await ReturnInternal(policy, action, trackRetryException, cancelToken);
+		stats?.TrackResult(name, policy, result);
 		if (result is FailureRetryResult { Ex: var ex })
 			throw ex;
 		return resultValue ?? throw new ArgumentException("This shouldn't be null on success");

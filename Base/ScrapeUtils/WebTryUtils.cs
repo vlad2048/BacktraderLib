@@ -4,7 +4,7 @@ namespace ScrapeUtils;
 
 public static class WebTryUtils
 {
-	public static async Task Sleep(this Web web, double seconds) => await Task.Delay(TimeSpan.FromSeconds(seconds), web.CancelToken);
+	public static async Task Sleep(this Web web, double seconds) => await Task.Delay(TimeSpan.FromSeconds(seconds), web.CancelToken ?? CancellationToken.None);
 
 
 	public static async Task Click(this Web web, ILoc loc, string name, RetryPolicy? policy = null)
