@@ -35,6 +35,7 @@ sealed class ScrapeLogger : IDisposable
 		// DumpContainer
 		progress = progress with { Company = (company, idx, cnt), Report = null, Quarter = null };
 		dcProgress.UpdateContent(progress);
+		dcErrors.ClearContent();
 	}
 	public void ProgressReport(ReportType report)
 	{
