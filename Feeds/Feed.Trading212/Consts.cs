@@ -10,7 +10,6 @@ static class Consts
 	static readonly string RootFolder = FileUtils.GetProjectRootFolder("Feed.Trading212");
 
 	public static readonly string StateFile = Path.Combine(RootFolder, "state.json");
-	public static readonly string LogFile = Path.Combine(RootFolder, "log.txt");
 
 	public static class Data
 	{
@@ -18,6 +17,14 @@ static class Consts
 		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.json").FromAllFilesSafe();
 		public static string CompanyJsonFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.json");
 		public static string[] GetAllCompanyJsonFiles() => GetAllCompanies().SelectA(CompanyJsonFile);
+	}
+
+	public static class Logs
+	{
+		static readonly string Folder = Path.Combine(RootFolder, "logs").CreateFolderIFN();
+		public static readonly string LogFile = Path.Combine(Folder, "log.txt");
+		public static readonly string InvalidRequestFile = Path.Combine(Folder, "invalid-request.html");
+		public static readonly string ErrorFile = Path.Combine(Folder, "errors.json");
 	}
 
 

@@ -10,7 +10,7 @@ using LINQPad;
 namespace Feed.Trading212._sys;
 
 
-sealed class DataFiller(ScrapeOpt opt)
+sealed class DataFiller
 {
 	readonly ConcurrentDictionary<ReportType, ConcurrentDictionary<Quarter, RefField[]>> reports = new();
 
@@ -155,8 +155,8 @@ sealed class DataFiller(ScrapeOpt opt)
 
 	async Task WriteInvalidRequestFileIFN(string? resTxt)
 	{
-		if (isInvalidRequestWritten || opt.InvalidRequestSaveFile == null || resTxt == null) return;
+		if (isInvalidRequestWritten || resTxt == null) return;
 		isInvalidRequestWritten = true;
-		await File.WriteAllTextAsync(opt.InvalidRequestSaveFile, resTxt);
+		await File.WriteAllTextAsync(Consts.Logs.InvalidRequestFile, resTxt);
 	}
 }

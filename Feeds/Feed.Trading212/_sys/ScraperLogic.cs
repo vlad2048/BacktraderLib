@@ -10,10 +10,13 @@ namespace Feed.Trading212._sys;
 
 Rare exceptions
 ===============
-	Spot   : Report_Quarter
-	Type   : PlaywrightException
-	Message: Element is outside of the viewport / waiting for GetByTestId(new Regex("-tag-component-Q\\d'\\d\\d-text")).Nth(45)
+	Spot	: Report_Quarter
+	Type	: PlaywrightException
+	Message	: Element is outside of the viewport / waiting for GetByTestId(new Regex("-tag-component-Q\\d'\\d\\d-text")).Nth(45)
 
+	Spot	: GotoReport_MoreFinancialsExpand
+	Type	: TimeoutException
+	Message	: [UnexpectedException] UnexpectedException: [CheckAOrB_ClickBIfB - GotoReport_MoreFinancialsExpand] CheckAOrB failed
 */
 
 static class ScraperLogic
@@ -25,10 +28,9 @@ static class ScraperLogic
 		ScrapeOpt opt
 	)
 	{
-		using var fileLog = new FileLog(Consts.LogFile);
 		var stateFile = new StateFileHolder(opt.DisableSaving);
 		var companiesTodo = companies.WhereA(company => stateFile.NeedsScraping(company, opt.RefreshOldPeriod));
-		var scrapeLogger = new ScrapeLogger(web.Log, opt, companies.Length, companiesTodo.Length);
+		using var logger = new ScrapeLogger(web.Log, opt, companies.Length, companiesTodo.Length);
 
 		try
 		{
@@ -38,8 +40,6 @@ static class ScraperLogic
 
 			if (opt.DryRun)
 				return;
-
-			fileLog.LogStart(companiesTodo.Length);
 
 			for (var companyIdx = 0; companyIdx < companiesTodo.Length; companyIdx++)
 			{
@@ -52,8 +52,7 @@ static class ScraperLogic
 					companiesTodo.Length,
 					opt,
 					stateFile,
-					fileLog,
-					scrapeLogger
+					logger
 				);
 
 				if (stopImmediatly)
@@ -62,14 +61,13 @@ static class ScraperLogic
 		}
 		catch (Exception ex)
 		{
-			fileLog.LogImpossibleException(ex);
-			scrapeLogger.LogImpossibleException(ex);
+			logger.LogImpossibleException(ex);
 		}
 		finally
 		{
 			web.CancelToken = null;
 			web.Stats = null;
-			fileLog.LogFinished();
+			logger.LogFinished();
 		}
 	}
 
@@ -82,16 +80,14 @@ static class ScraperLogic
 		int companyCnt,
 		ScrapeOpt opt,
 		StateFileHolder stateFile,
-		FileLog fileLog,
-		ScrapeLogger scrapeLogger
+		ScrapeLogger logger
 	)
 	{
 		for (var tryIdx = 0; tryIdx < Consts.MaxCompanyScrapeRetryCount; tryIdx++)
 		{
-			scrapeLogger.ProgressCompany(company.Name, companyIdx, companyCnt);
-			fileLog.LogProgress(company.Name, companyIdx, companyCnt, tryIdx);
+			logger.ProgressCompany(company.Name, companyIdx, companyCnt, tryIdx);
 
-			var result = await Scrape(web, company, opt, scrapeLogger);
+			var result = await Scrape(web, company, logger);
 			var errorResponse = Consts.GetErrorResponse(result.Error, tryIdx == Consts.MaxCompanyScrapeRetryCount - 1);
 
 			if (!opt.DisableSaving)
@@ -99,8 +95,8 @@ static class ScraperLogic
 				Save(company.Name, result, stateFile, errorResponse is FlagAsErrorErrorResponse);
 			}
 
-			fileLog.LogErrorResponse(errorResponse);
-			scrapeLogger.LogStats(web.Stats!);
+			logger.LogErrorResponse(errorResponse);
+			logger.LogStats(web.Stats!);
 
 			switch (errorResponse)
 			{
@@ -139,20 +135,19 @@ static class ScraperLogic
 	static async Task<CompanyScrapeResult> Scrape(
 		Web web,
 		CompanyDef company,
-		ScrapeOpt opt,
-		ScrapeLogger scrapeLogger
+		ScrapeLogger logger
 	)
 	{
 		await web.InitIFN();
 
-		var dataFiller = new DataFiller(opt);
+		var dataFiller = new DataFiller();
 		web.Page.RequestFinished += dataFiller.OnRequestFinished;
 		var quartersDone = GetQuartersDone(company.Name);
 
 
 		try
 		{
-			await Go(web, company, quartersDone, dataFiller, scrapeLogger);
+			await Go(web, company, quartersDone, dataFiller, logger);
 			return new CompanyScrapeResult(dataFiller.Reports, null);
 		}
 		catch (ScrapeException ex)
@@ -180,7 +175,7 @@ static class ScraperLogic
 		CompanyDef company,
 		QuarterSet quartersDone,
 		DataFiller dataFiller,
-		ScrapeLogger scrapeLogger
+		ScrapeLogger logger
 	)
 	{
 		await CheckNoConnection(web);
@@ -225,7 +220,7 @@ static class ScraperLogic
 		// ***********************************
 		foreach (var reportType in Enum.GetValues<ReportType>())
 		{
-			scrapeLogger.ProgressReport(reportType);
+			logger.ProgressReport(reportType);
 			await GotoReport(web, reportType);
 
 			await web.Sleep(1);
@@ -256,7 +251,7 @@ static class ScraperLogic
 				for (var idx = 0; idx < quarters.Length; idx++)
 				{
 					var quarter = quarters[idx];
-					scrapeLogger.ProgressQuarter(quarter, idx, quarters.Length);
+					logger.ProgressQuarter(quarter, idx, quarters.Length);
 					var quarterLoc = quarterMan.GetLoc(quarter);
 					if (fast)
 						await web.ClickNoCheck(quarterLoc, Spots.Report_Quarter);

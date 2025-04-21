@@ -1,14 +1,18 @@
 ﻿using BaseUtils;
+using Feed.Trading212._sys.Structs;
 using Feed.Trading212._sys.Utils;
 using LINQPad;
 using ScrapeUtils;
 
 namespace Feed.Trading212._sys;
 
-sealed class ScrapeLogger
+sealed class ScrapeLogger : IDisposable
 {
 	static readonly ReportType[] ReportTypes = Enum.GetValues<ReportType>();
 
+	public void Dispose() => fileLog.Dispose();
+
+	readonly FileLog fileLog;
 	readonly DumpContainer dcProgress;
 	readonly DumpContainer dcStats;
 	readonly DumpContainer dcErrors;
@@ -17,47 +21,91 @@ sealed class ScrapeLogger
 
 	public ScrapeLogger(DumpContainer dcLog, ScrapeOpt opt, int companies, int companiesTodo)
 	{
+		fileLog = new FileLog(Consts.Logs.LogFile);
 		LogStart(dcLog, opt, companies, companiesTodo);
 		dcProgress = dcLog.AddNewDC("Progress");
 		dcStats = dcLog.AddNewDC("RetryStats");
 		dcErrors = dcLog.AddNewDC("Errors");
 	}
 
-	public void ProgressCompany(string company, int idx, int cnt)
+	public void ProgressCompany(string company, int idx, int cnt, int tryIdx)
 	{
+		// FileLog
+		fileLog.Log($"[{idx.perc(cnt)}]  '{company}'" + (tryIdx > 0 ? $"   Retry {tryIdx}/{Consts.MaxCompanyScrapeRetryCount - 1}" : ""));
+		// DumpContainer
 		progress = progress with { Company = (company, idx, cnt), Report = null, Quarter = null };
 		dcProgress.UpdateContent(progress);
 	}
 	public void ProgressReport(ReportType report)
 	{
+		// FileLog
+		// DumpContainer
 		progress = progress with { Report = (report, ReportTypes.IdxOf(report), ReportTypes.Length), Quarter = null };
 		dcProgress.UpdateContent(progress);
 	}
 	public void ProgressQuarter(Quarter quarter, int idx, int cnt)
 	{
+		// FileLog
+		// DumpContainer
 		progress = progress with { Quarter = (quarter, idx, cnt) };
 		dcProgress.UpdateContent(progress);
 	}
 
-	public void LogStats(FullStatsKeeper stats) => dcStats.UpdateContent(stats);
-	
-	public void LogImpossibleException(Exception ex) => dcErrors.AppendContent(ex);
-
-	public void LogCancel() => dcErrors.AppendContent(Util.RawHtml("<h1 style='color:#72b4ef'>Cancel</h1>"));
-
-
-	static void LogStart(DumpContainer dc, ScrapeOpt opt, int companies, int companiesTodo)
+	public void LogStats(FullStatsKeeper stats)
 	{
-		dc.LogH2("Trading212 Scraping");
-		dc.LogH3("Options");
-		dc.Log($"    RefreshOldPeriod      : {opt.RefreshOldPeriod}");
-		dc.Log($"    DryRun                : {opt.DryRun}");
-		dc.Log($"    DisableSaving         : {opt.DisableSaving}");
-		dc.Log($"    InvalidRequestSaveFile: {opt.InvalidRequestSaveFile}");
-		dc.LogH3("Companies");
-		dc.Log($"    companies    : {companies}");
-		dc.Log($"    companiesTodo: {companiesTodo}");
-		dc.Log("");
+		// FileLog
+		// DumpContainer
+		dcStats.UpdateContent(stats);
+	}
+
+	public void LogImpossibleException(Exception ex)
+	{
+		// FileLog
+		fileLog.Log($"Impossible exception in outer loop (isCancel:{ex.IsCancel()}): {ex}");
+		// DumpContainer
+		dcErrors.AppendContent(ex);
+	}
+
+	public void LogFinished()
+	{
+		// FileLog
+		fileLog.Log("Finished");
+		// DumpContainer
+	}
+
+	public void LogErrorResponse(IErrorResponse errorResponse)
+	{
+		var str = errorResponse.GetLogMessage();
+		var ex = errorResponse.GetLogException();
+		if (str != null)
+		{
+			// FileLog
+			fileLog.Log(str);
+			// DumpContainer
+			dcErrors.AppendContent(Util.RawHtml($"<h1 style='color:#72b4ef'>{str}</h1>"));
+		}
+		if (ex != null)
+		{
+			// ErrorFile
+			ErrorFileUtils.Log(ex);
+		}
+	}
+
+	
+
+	void LogStart(DumpContainer dcLog, ScrapeOpt opt, int companies, int companiesTodo)
+	{
+		fileLog.Log($"Start({companiesTodo})");
+
+		dcLog.LogH2("Trading212 Scraping");
+		dcLog.LogH3("Options");
+		dcLog.Log($"    RefreshOldPeriod      : {opt.RefreshOldPeriod}");
+		dcLog.Log($"    DryRun                : {opt.DryRun}");
+		dcLog.Log($"    DisableSaving         : {opt.DisableSaving}");
+		dcLog.LogH3("Companies");
+		dcLog.Log($"    all : {companies}");
+		dcLog.Log($"    todo: {companiesTodo}");
+		dcLog.Log("");
 	}
 
 
@@ -81,7 +129,7 @@ sealed class ScrapeLogger
 
 
 
-static class ScrapeLoggerUtils
+file static class ScrapeLoggerUtils
 {
 	public static string Fmt<T>(this (T, int, int)? t) => t switch
 	{

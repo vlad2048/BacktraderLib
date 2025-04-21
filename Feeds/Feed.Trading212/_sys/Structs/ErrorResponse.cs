@@ -21,3 +21,27 @@ static class ErrorResponse
 	public static IErrorResponse FlagAsError(ScrapeError error, FlagAsErrorReason reason) => new FlagAsErrorErrorResponse(error, reason);
 	public static IErrorResponse WaitAndRetry(ScrapeError error, int delaySeconds) => new WaitAndRetryErrorResponse(error, delaySeconds);
 }
+
+
+static class ErrorResponseUtils
+{
+	public static string? GetLogMessage(this IErrorResponse errorResponse) =>
+		errorResponse switch
+		{
+			NoneErrorResponse => null,
+			StopImmediatlyErrorResponse => "Cancel",
+			FlagAsErrorErrorResponse { Error: var error, Reason: var reason } => $"Error => FlagAsError(reason={reason})    ({error})",
+			WaitAndRetryErrorResponse { Error: var error, DelaySeconds: var delay } => $"Error => WaitAndRetry(delay={delay}sec)    ({error})",
+			_ => throw new ArgumentException($"Unknown IErrorResponse: {errorResponse.GetType().Name}"),
+		};
+
+	public static Exception? GetLogException(this IErrorResponse errorResponse) =>
+		errorResponse switch
+		{
+			NoneErrorResponse => null,
+			StopImmediatlyErrorResponse => null,
+			FlagAsErrorErrorResponse { Error.InnerException: var ex } => ex,
+			WaitAndRetryErrorResponse { Error.InnerException: var ex } => ex,
+			_ => throw new ArgumentException($"Unknown IErrorResponse: {errorResponse.GetType().Name}"),
+		};
+}

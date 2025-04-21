@@ -69,15 +69,20 @@ public sealed record FullStats(
 			Fail = kv.Value.Failures,
 			Total = kv.Value.Total,
 			Retries = kv.Value.TryCounts.Skip(1).JoinText(","),
-			ExceptionsRetry = kv.Value.ExceptionsRetry.Fmt(),
-			ExceptionsFatal = kv.Value.ExceptionsFatal.Fmt(),
+			ExceptionsRetry = kv.Value.ExceptionsRetry.Fmt().SelectA(e => new { Exception = e.str, Count = e.cnt }),
+			ExceptionsFatal = kv.Value.ExceptionsFatal.Fmt().SelectA(e => new { Exception = e.str, Count = e.cnt }),
 		});
 }
 
 
 file static class ExceptionFmt
 {
-	public static string[] Fmt(this Exception[] exs) => exs.SelectA(ex => ex.Fmt());
+	public static (string str, int cnt)[] Fmt(this Exception[] exs) =>
+		exs
+			.Select(ex => ex.Fmt())
+			.GroupBy(e => e)
+			.SelectA(g => (g.Key, g.Count()));
+
 	static string Fmt(this Exception ex) =>
 		ex.Message
 			.SplitInLines()
