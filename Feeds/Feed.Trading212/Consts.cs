@@ -23,16 +23,21 @@ static class Consts
 
 	public const string MainUrl = "https://app.trading212.com/";
 
-	public const int MaxCompanyScrapeRetryCount = 5;
 
 	public static readonly Quarter MinScrapeQuarter = Quarter.MinValue;
 
 	public static readonly bool[] QuarterLoops = [true, true, false];
 
 
-	public static int GetErrorWaitDelaySeconds(ScrapeErrorType errorType) =>
-		errorType switch
+	public const int MaxCompanyScrapeRetryCount = 5;
+
+	public static IErrorResponse GetErrorResponse(ScrapeError? error, bool isLastAttempt) =>
+		(error?.Type, isLastAttempt) switch
 		{
-			_ => 60,
+			(null, _) => ErrorResponse.None,
+			(ScrapeErrorType.Cancelled, _) => ErrorResponse.StopImmediatly,
+			(ScrapeErrorType.CompanyNotFound, _) => ErrorResponse.FlagAsError(error, FlagAsErrorReason.CompanyNotFound),
+			(_, false) => ErrorResponse.WaitAndRetry(error, 60),
+			(_, true) => ErrorResponse.FlagAsError(error, FlagAsErrorReason.ReachedMaxTries),
 		};
 }

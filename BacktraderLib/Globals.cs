@@ -6,6 +6,7 @@ global using System.Reactive.Linq;
 global using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using BacktraderLib._sys;
+using BacktraderLib._sys.FrameRendering;
 using Frames;
 using RxLib;
 
@@ -24,6 +25,7 @@ public static class BacktraderLibSetup
 		Events.Init();
 		PlottingInit.Init();
 		CtrlsInit.Init();
+		FrameRendererInit.Init();
 	}
 
 	public static void Dbg_SetFramePrinterCutoffs(int rowMax, int rowSmp, int colMax, int colSmp) => Frame.Dbg_SetFramePrinterCutoffs(rowMax, rowSmp, colMax, colSmp);

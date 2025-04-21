@@ -5,6 +5,17 @@ using ScrapeUtils;
 
 namespace Feed.Trading212._sys;
 
+
+/*
+
+Rare exceptions
+===============
+	Spot   : Report_Quarter
+	Type   : PlaywrightException
+	Message: Element is outside of the viewport / waiting for GetByTestId(new Regex("-tag-component-Q\\d'\\d\\d-text")).Nth(45)
+
+*/
+
 static class ScraperLogic
 {
 	public static async Task Scrape(
@@ -34,7 +45,7 @@ static class ScraperLogic
 			{
 				var company = companiesTodo[companyIdx];
 
-				var isCancelled = await ScrapeWithRetries(
+				var stopImmediatly = await ScrapeWithRetries(
 					web,
 					company,
 					companyIdx,
@@ -45,7 +56,7 @@ static class ScraperLogic
 					scrapeLogger
 				);
 
-				if (isCancelled)
+				if (stopImmediatly)
 					break;
 			}
 		}
@@ -61,6 +72,7 @@ static class ScraperLogic
 			fileLog.LogFinished();
 		}
 	}
+
 
 
 	static async Task<bool> ScrapeWithRetries(
@@ -80,43 +92,48 @@ static class ScraperLogic
 			fileLog.LogProgress(company.Name, companyIdx, companyCnt, tryIdx);
 
 			var result = await Scrape(web, company, opt, scrapeLogger);
+			var errorResponse = Consts.GetErrorResponse(result.Error, tryIdx == Consts.MaxCompanyScrapeRetryCount - 1);
 
 			if (!opt.DisableSaving)
-				Save(company.Name, result, stateFile, false);
+			{
+				Save(company.Name, result, stateFile, errorResponse is FlagAsErrorErrorResponse);
+			}
+
+			fileLog.LogErrorResponse(errorResponse);
 			scrapeLogger.LogStats(web.Stats!);
 
-
-			var reachedMaxTries = tryIdx == Consts.MaxCompanyScrapeRetryCount - 1;
-
-			switch (result.Error?.Type)
+			switch (errorResponse)
 			{
-				case null:
+				case NoneErrorResponse:
 					return false;
 
-				case ScrapeErrorType.Cancelled:
-					fileLog.LogCancel();
-					scrapeLogger.LogCancel();
+				case StopImmediatlyErrorResponse:
 					return true;
 
-				case not null:
-					var delay = Consts.GetErrorWaitDelaySeconds(result.Error.Type);
-					fileLog.LogError(result.Error, delay);
-					if (!reachedMaxTries)
+				case FlagAsErrorErrorResponse:
+					await web.Reset();
+					return false;
+
+				case WaitAndRetryErrorResponse { DelaySeconds: var delay }:
+					try
 					{
 						await web.Sleep(delay);
-						await web.Reset();
 					}
-					else
+					catch (Exception ex) when (ex.IsCancel())
 					{
-						fileLog.LogReachedMaxTries();
-						Save(company.Name, result, stateFile, true);
+						return true;
 					}
+					await web.Reset();
 					break;
+
+				default:
+					throw new ArgumentException($"Unknown IErrorResponse: {errorResponse.GetType().Name}");
 			}
 		}
 
 		return false;
 	}
+
 
 
 	static async Task<CompanyScrapeResult> Scrape(
@@ -186,6 +203,11 @@ static class ScraperLogic
 					await Locs.SearchResults_Exchange(item_).InnerTextAsync()
 				)
 			),
+			async () =>
+			{
+				await CheckNoConnection(web);
+				throw new TimeoutException($"[TypeInSearchBarAndReadResults - {Spots.Search_TypeAndRead}] Failed to find any items in the search results");
+			},
 			Spots.Search_TypeAndRead
 		);
 
@@ -319,7 +341,7 @@ static class ScraperLogic
 	}
 
 
-	static void Save(string companyName, CompanyScrapeResult result, StateFileHolder stateFile, bool reachedMaxTries)
+	static void Save(string companyName, CompanyScrapeResult result, StateFileHolder stateFile, bool flagAsError)
 	{
 		var dataFile = Consts.Data.CompanyJsonFile(companyName);
 		var reportsNext = result.Reports;
@@ -333,7 +355,7 @@ static class ScraperLogic
 		var status = result.Error switch
 		{
 			null => CompanyScrapeStatus.Success,
-			not null => reachedMaxTries switch
+			not null => flagAsError switch
 			{
 				false => CompanyScrapeStatus.InProgress,
 				true => CompanyScrapeStatus.Error,

@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using BacktraderLib._sys.JsonConverters;
+using BacktraderLib._sys.Utils;
 using RxLib;
 
 namespace BacktraderLib._sys.Tabulator;
@@ -310,23 +311,4 @@ file static class JsonUtils
 	);
 
 	static JsonValue ToJsonValue<T>(this T obj, Prop<T> prop) => JsonValue.Create($"{prop.Get(obj)}");
-}
-
-
-
-
-file static class JsonEnumUtils
-{
-	static readonly JsonSerializerOptions jsonOpt = new()
-	{
-		WriteIndented = true,
-		IndentCharacter = '\t',
-		IndentSize = 1,
-		Converters =
-		{
-			new AttributeBasedEnumConverter(),
-		},
-	};
-
-	public static string Ser<T>(T obj) => JsonSerializer.Serialize(obj, jsonOpt);
 }

@@ -42,6 +42,10 @@ public static class Frame
 	);
 
 	public static void Dbg_SetFramePrinterCutoffs(int rowMax, int rowSmp, int colMax, int colSmp) => (FramePrinter.RowMax, FramePrinter.RowSmp, FramePrinter.ColMax, FramePrinter.ColSmp) = (rowMax, rowSmp, colMax, colSmp);
+
+	internal static Func<object, object>? RendererSerie;
+	internal static Func<object, object>? RendererFrame;
+	internal static Func<object, object>? RendererFrame2;
 }
 
 
@@ -68,7 +72,11 @@ public sealed class Serie<N> : ITxt
 
 	// Printing
 	// --------
-	public object ToDump() => Txt;
+	public object ToDump() => Frame.RendererSerie switch
+	{
+		not null => Frame.RendererSerie(this),
+		null => Txt,
+	};
 	public TxtArray Txt => FramePrinter.Print(this);
 	public override string ToString() => $"Serie[{Name}](rows:{RowCount})";
 }
@@ -109,7 +117,11 @@ public sealed class Frame<N, K1> : IEnumerable<Serie<K1>>, ITxt
 
 	// Printing
 	// --------
-	public object ToDump() => Txt;
+	public object ToDump() => Frame.RendererFrame switch
+	{
+		not null => Frame.RendererFrame(this),
+		null => Txt,
+	};
 	public TxtArray Txt => FramePrinter.Print(this);
 	public override string ToString() => $"Frame<{typeof(K1).Name}>[{Name}](cols:{ColCount} rows:{RowCount})";
 }
@@ -162,7 +174,11 @@ public sealed class Frame<N, K1, K2> : IEnumerable<Frame<K1, K2>>, ITxt
 
 	// Printing
 	// --------
-	public object ToDump() => Txt;
+	public object ToDump() => Frame.RendererFrame2 switch
+	{
+		not null => Frame.RendererFrame2(this),
+		null => Txt,
+	};
 	public TxtArray Txt => FramePrinter.Print(this);
 	public override string ToString() => $"Frame<{typeof(K1).Name}, {typeof(K2).Name}>[{Name}](cols:{ColCount} rows:{RowCount})";
 }

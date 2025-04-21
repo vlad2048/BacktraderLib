@@ -60,4 +60,6 @@ public sealed record ScrapeError(
 		$"Missed quarters for {reportType}: {quarters.FmtHuman()}",
 		null
 	);
+
+	public override string ToString() => $"[{Type}] {Message}" + (InnerException != null ? $"  (innerEx: {InnerException})" : "");
 }

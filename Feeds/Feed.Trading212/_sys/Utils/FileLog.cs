@@ -46,11 +46,28 @@ static class FileLogUtils
 		fileLog.Log(str);
 	}
 
-	public static void LogImpossibleException(this FileLog fileLog, Exception ex) => fileLog.Log($"Impossible exception in outer loop: {ex}");
+	public static void LogImpossibleException(this FileLog fileLog, Exception ex) => fileLog.Log($"Impossible exception in outer loop (isCancel:{ex.IsCancel()}): {ex}");
 
-	public static void LogCancel(this FileLog fileLog) => fileLog.Log("Cancel");
 	public static void LogFinished(this FileLog fileLog) => fileLog.Log("Finished");
 
-	public static void LogError(this FileLog fileLog, ScrapeError error, int delay) => fileLog.Log($"Error: {error.Type}    wait {delay}sec    ({error.Message})");
-	public static void LogReachedMaxTries(this FileLog fileLog) => fileLog.Log("Error: Reached Max Tries");
+	public static void LogErrorResponse(this FileLog fileLog, IErrorResponse errorResponse)
+	{
+		switch (errorResponse)
+		{
+			case NoneErrorResponse:
+				break;
+
+			case StopImmediatlyErrorResponse:
+				fileLog.Log("Cancel");
+				break;
+
+			case FlagAsErrorErrorResponse { Error: var error, Reason: var reason }:
+				fileLog.Log($"Error => FlagAsError(reason={reason})    ({error})");
+				break;
+
+			case WaitAndRetryErrorResponse { Error: var error, DelaySeconds: var delay }:
+				fileLog.Log($"Error => WaitAndRetry(delay={delay}sec)    ({error})");
+				break;
+		}
+	}
 }

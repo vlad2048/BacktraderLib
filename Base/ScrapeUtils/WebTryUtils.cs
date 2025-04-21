@@ -119,6 +119,7 @@ public static class WebTryUtils
 		string text,
 		ILoc locItems,
 		Func<ILocator, Task<LocItem<T>>> readItem,
+		Func<Task> onNoItemsFound,
 		string name,
 		RetryPolicy? policy = null
 	)
@@ -141,7 +142,7 @@ public static class WebTryUtils
 				}
 
 				if (list.Count == 0)
-					throw new TimeoutException($"[TypeInSearchBarAndReadResults - {name}] Failed to find any items in the search results");
+					await onNoItemsFound();
 
 				return [..list];
 			},

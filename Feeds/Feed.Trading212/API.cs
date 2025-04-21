@@ -34,15 +34,18 @@ public static class API
 	public static ScrapeData Load(string companyName) => JsonUtils.Load<ScrapeData>(Consts.Data.CompanyJsonFile(companyName));
 
 
-	static readonly Lazy<StateFile> stateFile = new(() => JsonUtils.LoadOr(Consts.StateFile, StateFile.Empty));
+	static StateFile? stateFile;
+	static StateFile StateFile => stateFile ?? throw new ArgumentException("You need to call FeedTrading212Setup.Init() first");
 
 	public static bool GetIsScrapeNeeded(string companyName, TimeSpan? refreshOldPeriod)
 	{
-		var state = stateFile.Value.Map.TryGetValue(companyName, out var state_) switch
+		var state = StateFile.Map.TryGetValue(companyName, out var state_) switch
 		{
 			true => state_,
 			false => null,
 		};
 		return StateFileHolderUtils.NeedsScraping(state, refreshOldPeriod);
 	}
+
+	internal static void Init() => stateFile = JsonUtils.LoadOr(Consts.StateFile, StateFile.Empty);
 }
