@@ -7,6 +7,10 @@ static class Consts
 	public static readonly string RootFolder = FileUtils.GetProjectRootFolder("Feed.Universe");
 
 
+	public static readonly string CompanyDefsCacheFile = Path.Combine(RootFolder, "companydefs.json");
+	public static readonly TimeSpan CompanyDefsCacheMaxAge = TimeSpan.FromDays(1);
+
+
 	public static class StockAnalysis
 	{
 		static readonly string Folder = Path.Combine(RootFolder, "stockanalysis").CreateFolderIFN();

@@ -11,7 +11,7 @@ file static class Consts
 {
 	public const int Width = 800;
 	public const int Height = 400;
-	public const TabulatorLayout Layout = TabulatorLayout.FitColumns;
+	public const TableLayout Layout = TableLayout.FitColumns;
 	public const int IndexWidth = 90;
 	public const int ColumnWidth = 80;
 }

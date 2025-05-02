@@ -1,6 +1,6 @@
 ﻿using BacktraderLib._sys.JQuery;
 using BacktraderLib._sys.Slider;
-using BacktraderLib._sys.Tabulator;
+using BacktraderLib._sys.Table;
 
 namespace BacktraderLib._sys;
 
@@ -29,7 +29,8 @@ static class CtrlsInit
 	{
 		JQueryInit.Init();
 		SliderInit.Init();
-		TabulatorInit.Init();
+		//TabulatorInit.Init();
+		TableInit.Init();
 		Ctrls.Init_Log();
 		Css.Setup();
 	}

@@ -48,6 +48,8 @@ public static class EnumExt
 
 	public static SortedDictionary<K, V> ToSortedDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>> source) where K : notnull => new(source.ToDictionary());
 
+	public static SortedDictionary<K2, V2> ToSortedDictionary<K1, K2, V1, V2>(this IEnumerable<KeyValuePair<K1, V1>> source, Func<K1, K2> keyFun, Func<V1, V2> valFun) where K1 : notnull where K2 : notnull => new(source.ToDictionary(e => keyFun(e.Key), e => valFun(e.Value)));
+
 	public static T[] Shuffle<T>(this IEnumerable<T> source, int? seed)
 	{
 		var rnd = seed switch

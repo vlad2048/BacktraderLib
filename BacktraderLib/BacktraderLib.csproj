@@ -18,6 +18,8 @@
     <EmbeddedResource Include="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.css" />
     <EmbeddedResource Include="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.js" />
     <EmbeddedResource Include="LINQPad\Controls\_sys\JQuery\jquery.min.js" />
+    <EmbeddedResource Include="LINQPad\Controls\_sys\Table\tabulator.min.js" />
+    <EmbeddedResource Include="LINQPad\Controls\_sys\Table\tabulator_site_dark.min.css" />
     <EmbeddedResource Include="LINQPad\Controls\_sys\Tabulator\tabulator.min.js" />
     <EmbeddedResource Include="LINQPad\Controls\_sys\Tabulator\tabulator_site_dark.min.css" />
     <EmbeddedResource Include="LINQPad\Plotting\_sys\Themes\dark.json" />

@@ -1,4 +1,5 @@
 ﻿using Feed.SEC._sys.Utils;
+using FeedUtils;
 
 namespace Feed.SEC._sys;
 
@@ -9,15 +10,7 @@ static class _4_NameChangeCompiler
 		var Log = Logger.Make(LogCategory._4_Rename);
 		Log.Step(Step.Rename);
 
-		var timePrev = new FileInfo(Consts.Group.QuartersDoneFile).LastWriteTime;
-		var timeNext = File.Exists(Consts.Rename.DataFile) switch
-		{
-			false => DateTime.MinValue,
-			true => new FileInfo(Consts.Rename.DataFile).LastWriteTime,
-		};
-		Log($"timePrev: {timePrev}");
-		Log($"timeNext: {timeNext}");
-		if (timeNext >= timePrev)
+		if (!FileUtils.Is_Dst_MissingOrNotAsRecentAs_Src(Consts.Group.QuartersDoneFile, Consts.Rename.DataFile))
 		{
 			Log("timeNext >= timePrev => We are up-to-date");
 			Log("UP-TO-DATE");

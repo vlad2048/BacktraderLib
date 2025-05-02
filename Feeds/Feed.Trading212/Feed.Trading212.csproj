@@ -13,4 +13,8 @@
     <ProjectReference Include="..\..\Base\ScrapeUtils\ScrapeUtils.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Structs\2_Processing\" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,5 @@
 ﻿using BaseUtils;
-using Feed.Trading212._sys.Structs;
+using Feed.Trading212._sys._1_Scraping.Structs;
 using FeedUtils;
 
 namespace Feed.Trading212;
@@ -9,15 +9,27 @@ static class Consts
 {
 	static readonly string RootFolder = FileUtils.GetProjectRootFolder("Feed.Trading212");
 
-	public static readonly string StateFile = Path.Combine(RootFolder, "state.json");
 
-	public static class Data
+
+	public static class Scraping
 	{
-		static readonly string Folder = Path.Combine(RootFolder, "data").CreateFolderIFN();
+		public static readonly string StateFile = Path.Combine(RootFolder, "scrape_state.json");
+		static readonly string Folder = Path.Combine(RootFolder, "1_scraping").CreateFolderIFN();
 		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.json").FromAllFilesSafe();
 		public static string CompanyJsonFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.json");
-		public static string[] GetAllCompanyJsonFiles() => GetAllCompanies().SelectA(CompanyJsonFile);
 	}
+
+
+
+	public static class Processing
+	{
+		public static readonly string TemplateFile = Path.Combine(RootFolder, "processing_template.json");
+		static readonly string Folder = Path.Combine(RootFolder, "2_processing").CreateFolderIFN();
+		public static string[] GetAllCompanies() => Directory.GetFiles(Folder, "*.json").FromAllFilesSafe();
+		public static string CompanyJsonFile(string company) => Path.Combine(Folder, $"{company.ToFileSafe()}.json");
+	}
+
+
 
 	public static class Logs
 	{

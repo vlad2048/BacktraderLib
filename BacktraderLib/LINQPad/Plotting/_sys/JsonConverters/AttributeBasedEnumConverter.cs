@@ -7,10 +7,29 @@ namespace BacktraderLib._sys.JsonConverters;
 
 enum EnumStyle
 {
+	/// <summary>
+	/// 'SomeName'
+	/// </summary>
 	Default,
+
+	/// <summary>
+	/// 'somename'
+	/// </summary>
 	LowerCase,
+
+	/// <summary>
+	/// 'someName'
+	/// </summary>
 	CamelCase,
+
+	/// <summary>
+	/// 'some+name'
+	/// </summary>
 	PlusSeparated,
+
+	/// <summary>
+	/// 'some-name'
+	/// </summary>
 	DashSeparated,
 }
 

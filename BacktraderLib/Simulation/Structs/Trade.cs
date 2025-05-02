@@ -3,7 +3,7 @@
 namespace BacktraderLib;
 
 
-public record Trade(
+public sealed record Trade(
 	int Id,
 	int DadId,
 	string Symbol,

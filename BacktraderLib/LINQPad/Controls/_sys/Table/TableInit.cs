@@ -1,11 +1,10 @@
-﻿/*
-using LINQPad;
+﻿using LINQPad;
 
-namespace BacktraderLib._sys.Tabulator;
+namespace BacktraderLib._sys.Table;
 
-static class TabulatorInit
+static class TableInit
 {
-	const string ResourceFolder = "BacktraderLib.LINQPad.Controls._sys.Tabulator";
+	const string ResourceFolder = "BacktraderLib.LINQPad.Controls._sys.Table";
 
 	public static void Init()
 	{
@@ -35,4 +34,3 @@ static class TabulatorInit
 		);
 	}
 }
-*/

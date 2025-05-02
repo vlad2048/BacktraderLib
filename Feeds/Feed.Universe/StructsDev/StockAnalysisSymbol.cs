@@ -1,6 +1,6 @@
 ﻿namespace Feed.Universe;
 
-public record StockAnalysisSymbol(
+public sealed record StockAnalysisSymbol(
 	string Symbol,
 	decimal MarketCap,
 	decimal Revenue

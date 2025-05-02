@@ -1,11 +1,55 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 
 namespace BaseUtils;
 
 public static class ExprUtils
 {
-	public static string GetName<T>(Expression<Func<T, object>> expr)
+	/*
+
+	Expression<Func<T, V>>
+	======================
+		Type																			NodeType
+		-----------------------------------------------------------------------------------------
+		MemberExpression (private: PropertyExpression)									MemberAccess
+			Expression=ParameterExpression (private: TypedParameterExpression)			Parameter
+
+
+	Expression<Func<T, object>>
+	===========================
+		Type																			NodeType
+		--------------------------------------------------------------------------------------------
+			UnaryExpression																Convert
+				Operand=MemberExpression (private: PropertyExpression)					MemberAccess
+					Expression=ParameterExpression (private: TypedParameterExpression)	Parameter
+
+	*/
+	public static bool IsSimpleAccessor<T, V>(this Expression<Func<T, V>> expr)
 	{
+		if (
+			expr.Body.Is<MemberExpression>(ExpressionType.MemberAccess, out var exprA) &&
+			exprA.Expression != null &&
+			exprA.Expression.Is<ParameterExpression>(ExpressionType.Parameter, out _)
+		)
+			return true;
+
+		if (
+			expr.Body.Is<UnaryExpression>(ExpressionType.Convert, out var exprB) &&
+			exprB.Operand.Is<MemberExpression>(ExpressionType.MemberAccess, out var exprB2) &&
+			exprB2.Expression != null &&
+			exprB2.Expression.Is<ParameterExpression>(ExpressionType.Parameter, out _)
+		)
+			return true;
+
+		return false;
+	}
+
+
+
+	public static string GetSimpleAccessorName<T>(this Expression<Func<T, object>> expr)
+	{
+		if (!expr.IsSimpleAccessor()) throw new ArgumentException("Expression must be a simple property accessor");
+
 		var lambda = (LambdaExpression)expr;
 		var p = lambda.Parameters.Single();
 
@@ -17,7 +61,44 @@ public static class ExprUtils
 		return visitor.Name;
 	}
 
-	public static Func<T, object> GetGetter<T>(Expression<Func<T, object>> expr) => expr.Compile();
+
+
+
+	public static Type GetSimpleAccessorPropertyType<T>(this Expression<Func<T, object>> expr)
+	{
+		if (!expr.IsSimpleAccessor()) throw new ArgumentException("Expression must be a simple property accessor");
+
+		if (
+			expr.Body.Is<MemberExpression>(ExpressionType.MemberAccess, out var exprA)
+		)
+			return exprA.Type;
+
+		if (
+			expr.Body.Is<UnaryExpression>(ExpressionType.Convert, out var exprB) &&
+			exprB.Operand.Is<MemberExpression>(ExpressionType.MemberAccess, out var exprB2)
+		)
+			return exprB2.Type;
+
+		throw new ArgumentException("Failed to get property type for simple accessor");
+	}
+
+
+
+
+	static bool Is<T>(this Expression expr, ExpressionType exprType, [NotNullWhen(true)] out T? typedExpr) where T : Expression
+	{
+		if (expr is T typedExpr_ && expr.NodeType == exprType)
+		{
+			typedExpr = typedExpr_;
+			return true;
+		}
+		else
+		{
+			typedExpr = null;
+			return false;
+		}
+	}
+
 
 	sealed class NameVisitor(ParameterExpression p) : ExpressionVisitor
 	{

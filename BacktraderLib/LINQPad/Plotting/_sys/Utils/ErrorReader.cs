@@ -9,7 +9,7 @@ sealed record PlotlyError(
 	string Msg
 );
 
-public record PlotlyErrorPath(string[]? Path)
+public sealed record PlotlyErrorPath(string[]? Path)
 {
 	public object? ToDump() => Path;
 }

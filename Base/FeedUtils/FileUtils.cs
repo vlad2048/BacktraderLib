@@ -33,4 +33,18 @@ public static class FileUtils
 		.Replace('~', '.');
 
 	public static string[] FromAllFilesSafe(this string[] files) => files.SelectA(e => (Path.GetFileNameWithoutExtension(e) ?? throw new ArgumentException("Oh no")).FromFileSafe());
+
+
+	public static bool Is_Dst_MissingOrNotAsRecentAs_Src(string fileSrc, string fileDst)
+	{
+		if (!File.Exists(fileSrc)) throw new IOException($"fileSrc is missing: '{fileSrc}'");
+		if (!File.Exists(fileDst)) return true;
+		var timeSrc = new FileInfo(fileSrc).LastWriteTime;
+		var timeDst = new FileInfo(fileDst).LastWriteTime;
+		return timeDst < timeSrc;
+	}
+
+	public static bool DoesFileExistAndIsRecentEnough(string file, TimeSpan maxAge) =>
+			File.Exists(file) &&
+			DateTime.Now - new FileInfo(file).LastWriteTime <= maxAge;
 }
