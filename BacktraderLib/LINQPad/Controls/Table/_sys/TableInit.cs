@@ -1,10 +1,10 @@
 ﻿using LINQPad;
 
-namespace BacktraderLib._sys.Table;
+namespace BacktraderLib._sys;
 
 static class TableInit
 {
-	const string ResourceFolder = "BacktraderLib.LINQPad.Controls._sys.Table";
+	const string ResourceFolder = "BacktraderLib.LINQPad.Controls.Table._sys";
 
 	public static void Init()
 	{

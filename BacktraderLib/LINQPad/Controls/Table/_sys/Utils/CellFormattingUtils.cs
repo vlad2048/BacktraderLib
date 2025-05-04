@@ -1,4 +1,4 @@
-﻿namespace BacktraderLib._sys.Table;
+﻿namespace BacktraderLib._sys.Utils;
 
 static class CellFormattingUtils
 {

@@ -1,6 +1,5 @@
 ﻿using BacktraderLib._sys.JQuery;
 using BacktraderLib._sys.Slider;
-using BacktraderLib._sys.Table;
 
 namespace BacktraderLib._sys;
 

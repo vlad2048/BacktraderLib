@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using BaseUtils;
 
-namespace BacktraderLib._sys.Table;
+namespace BacktraderLib._sys.Utils;
 
 static class ColumnGuesser
 {

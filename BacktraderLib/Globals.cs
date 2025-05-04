@@ -11,7 +11,7 @@ using Frames;
 using RxLib;
 
 [assembly: InternalsVisibleTo("BacktraderLib.Tests")]
-[assembly: InternalsVisibleTo("LINQPadQuery")]
+//[assembly: InternalsVisibleTo("LINQPadQuery")]
 
 namespace BacktraderLib;
 

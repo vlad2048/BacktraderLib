@@ -1,12 +1,13 @@
-﻿using RxLib;
-using System.Text.Json.Nodes;
+﻿using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using BacktraderLib._sys.Utils;
-using LINQPad;
-using System.Text.Encodings.Web;
 using BaseUtils;
+using LINQPad;
+using RxLib;
 
-namespace BacktraderLib._sys.Table;
+namespace BacktraderLib._sys;
 
 static class TableLogic
 {
@@ -32,11 +33,17 @@ static class TableLogic
 			items
 				.Select((item, itemIdx) =>
 					columns
-						.Index()
-						.Select(t => JsonUtils.KeyVal(
-							ColumnFieldName(t.Index),
-							t.Item.Fun(item)
-								.FormatEnums()
+						.SelectMany((column, columnIdx) => DuoIf(
+							JsonUtils.KeyVal(
+								ColumnFieldName(columnIdx),
+								column.Fun(item)
+									.FormatEnums()
+							),
+							column.SearchInfo_?.FunOverride != null,
+							() => JsonUtils.KeyVal(
+								ColumnSearchFieldName(columnIdx),
+								column.SearchInfo_!.FunOverride!(item)
+							)
 						))
 						.Prepend(JsonUtils.KeyVal(
 							"id",
@@ -51,12 +58,22 @@ static class TableLogic
 		var jsonColumns = new
 		{
 			columns = columns
-				.Select((e, i) => new
-				{
-					field = ColumnFieldName(i),
-					title = e.Title,
-					hozAlign = e.Align_.SerEnum(),
-				})
+				.SelectMany((column, columnIdx) => DuoIf<object>(
+					new
+					{
+						field = ColumnFieldName(columnIdx),
+						title = column.Title,
+						hozAlign = column.Align_.SerEnum(),
+						formatter = column.Fmt_,
+					},
+					column.SearchInfo_?.FunOverride != null,
+					() => new
+					{
+						field = ColumnSearchFieldName(columnIdx),
+						title = ColumnSearchFieldName(columnIdx),
+						visible = false,
+					}
+				))
 				.ToJsonArray(),
 		}.ToJsonObject();
 
@@ -132,7 +149,7 @@ static class TableLogic
 			);
 			""",
 			e => e
-				.JSRepl_Obj(0, jsonConfig.Ser())
+				.JSRepl_Obj(0, jsonConfig.SerFinal())
 		);
 		var jsInitSelection = onSelect switch
 		{
@@ -152,8 +169,6 @@ static class TableLogic
 			null => "",
 		};
 
-		//jsInit.Dump();
-
 
 
 		// ********************
@@ -164,7 +179,7 @@ static class TableLogic
 		var searchBarCtrls = new List<Tag>();
 		var jsInitTextBox = "";
 
-		if (columns.Any(e => e.SearchType_ is SearchType.TextBox))
+		if (columns.Any(e => e.SearchInfo_ != null))
 		{
 			var idTextBox = $"{id}-search";
 			searchBarCtrls.Add(new Tag("input", idTextBox)
@@ -180,9 +195,14 @@ static class TableLogic
 				],
 			});
 			var jsSearchExpr = columns
-				.Index()
-				.Where(t => t.Item.SearchType_ is SearchType.TextBox)
-				.Select(t => ColumnFieldName(t.Index))
+				.Where(column => column.SearchInfo_ != null)
+				.Select((column, columnIdx) =>
+					(column.SearchInfo_!.FunOverride != null) switch
+					{
+						false => ColumnFieldName(columnIdx),
+						true => ColumnSearchFieldName(columnIdx),
+					}
+				)
 				.Select(e => $$"""${row.{{e}}}""")
 				.JoinText(" ");
 			jsInitTextBox = JS.Fmt(
@@ -209,12 +229,7 @@ static class TableLogic
 			);
 		}
 
-		foreach (var t in columns.Index().Where(t => t.Item.SearchType_ is SearchType.DropDown))
-		{
-			if (t.Item.ExprValueType?.IsEnum != true) throw new ArgumentException("For now, SearchType.DropDown only works if you use Add(Expression<Func<T, object>>) that references a property of an Enum type");
-
-			throw new NotImplementedException("Actually SearchType.DropDown is not yet implemented at all");
-		}
+		searchBarCtrls = [..opts.ExtraCtrlsPrepend, ..searchBarCtrls, ..opts.ExtraCtrlsAppend];
 
 
 
@@ -223,6 +238,14 @@ static class TableLogic
 		// **** Final Tag ****
 		// *******************
 		// *******************
+		var finalJS =
+			jsInitTable +
+			jsInitSelection +
+			jsInitTextBox;
+
+		if (opts.Dbg_)
+			Util.SyntaxColorText(finalJS, SyntaxLanguageStyle.JavaScript).Dump();
+
 		var tag = new Tag("div")
 		{
 			Class = CtrlsClasses.TableWrapper,
@@ -249,10 +272,7 @@ static class TableLogic
 
 				new Tag("div", id)
 				{
-					OnRenderJS =
-						jsInitTable +
-						jsInitSelection +
-						jsInitTextBox,
+					OnRenderJS = finalJS,
 				},
 			],
 		};
@@ -302,13 +322,13 @@ static class TableLogic
 					await table.setData(
 						____1____
 					);
-					____2____
+					____2____;
 				})();
 				""",
 				e => e
 					.JSRepl_Var(0, id)
 					.JSRepl_Obj(1, jsonDataFun(items).Ser())
-					.JSRepl_Var(2, onSelect != null ? "table.selectRow(0);" : "")
+					.JSRepl_Var(2, onSelect != null ? "table.selectRow(0)" : "")
 			)).D(D);
 
 
@@ -319,6 +339,15 @@ static class TableLogic
 
 
 	static string ColumnFieldName(int columnIdx) => $"c{columnIdx}";
+	static string ColumnSearchFieldName(int columnIdx) => $"s{columnIdx}";
+
+
+	static T[] DuoIf<T>(T first, bool condition, Func<T> second) =>
+		condition switch
+		{
+			false => [first],
+			true => [first, second()],
+		};
 }
 
 
@@ -355,6 +384,7 @@ file static class JsonUtils
 	};
 
 	public static string Ser<T>(this T obj) => JsonSerializer.Serialize(obj, jsonOpt);
+	public static string SerFinal<T>(this T obj) => JsonSerializer.Serialize(obj, jsonOptFinal);
 	
 	static T Deser<T>(this string str) => JsonSerializer.Deserialize<T>(str, jsonOpt)!;
 
@@ -375,4 +405,69 @@ file static class JsonUtils
 		IndentSize = 1,
 		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 	};
+
+	static readonly JsonSerializerOptions jsonOptFinal = new()
+	{
+		WriteIndented = true,
+		IndentCharacter = '\t',
+		IndentSize = 1,
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+		Converters =
+		{
+			new JsonObjectFormatterConverter(),
+		},
+	};
+
+
+
+
+	sealed class JsonObjectFormatterConverter : JsonConverter<JsonObject>
+	{
+		public override JsonObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject) throw new JsonException("Expected StartObject token");
+			if (JsonNode.Parse(ref reader) is not JsonObject jsonObject) throw new JsonException("Failed to deserialize JsonObject");
+			return jsonObject;
+		}
+
+		public override void Write(Utf8JsonWriter writer, JsonObject value, JsonSerializerOptions options)
+		{
+			writer.WriteStartObject();
+			foreach (var property in value)
+			{
+				writer.WritePropertyName(property.Key);
+
+				if (property is { Key: "formatter", Value: not null })
+				{
+					var str = property.Value.ToString();
+					writer.WriteRawValue(str, true);
+				}
+				else if (property.Value is JsonObject nestedObject)
+				{
+					JsonSerializer.Serialize(writer, nestedObject, options);
+				}
+				else if (property.Value is JsonArray nestedArray)
+				{
+					writer.WriteStartArray();
+					foreach (var item in nestedArray)
+					{
+						if (item is JsonObject arrayNestedObject)
+						{
+							JsonSerializer.Serialize(writer, arrayNestedObject, options);
+						}
+						else
+						{
+							JsonSerializer.Serialize(writer, item, options);
+						}
+					}
+					writer.WriteEndArray();
+				}
+				else
+				{
+					JsonSerializer.Serialize(writer, property.Value, options);
+				}
+			}
+			writer.WriteEndObject();
+		}
+	}
 }
