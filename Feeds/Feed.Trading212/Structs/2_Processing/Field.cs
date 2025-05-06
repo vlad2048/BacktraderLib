@@ -33,6 +33,7 @@ public sealed record FieldVal(
 
 public sealed record FieldDefFlat(
 	ReportType ReportType,
+	int Idx,
 	string Title,
 	FieldType Type,
 	bool Important,
@@ -52,13 +53,14 @@ public static class FieldUtils
 
 	static IEnumerable<FieldDefFlat> Flatten(this IEnumerable<FieldDef> xs, ReportType reportType)
 	{
+		var idx = 0;
 		foreach (var x in xs)
 		{
-			yield return x.ToFieldDefFlat(reportType);
+			yield return x.ToFieldDefFlat(reportType, idx++);
 			foreach (var kid in x.Kids.Flatten(reportType))
 				yield return kid;
 		}
 	}
 
-	static FieldDefFlat ToFieldDefFlat(this FieldDef x, ReportType reportType) => new(reportType, x.Title, x.Type, x.Important, x.Compact);
+	static FieldDefFlat ToFieldDefFlat(this FieldDef x, ReportType reportType, int idx) => new(reportType, idx, x.Title, x.Type, x.Important, x.Compact);
 }

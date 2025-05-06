@@ -1,7 +1,4 @@
-﻿using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Nodes;
 using BacktraderLib._sys.Utils;
 using BaseUtils;
 using LINQPad;
@@ -34,18 +31,18 @@ static class TableLogic
 				.Select((item, itemIdx) =>
 					columns
 						.SelectMany((column, columnIdx) => DuoIf(
-							JsonUtils.KeyVal(
+							TableJsonUtils.KeyVal(
 								ColumnFieldName(columnIdx),
 								column.Fun(item)
 									.FormatEnums()
 							),
 							column.SearchInfo_?.FunOverride != null,
-							() => JsonUtils.KeyVal(
+							() => TableJsonUtils.KeyVal(
 								ColumnSearchFieldName(columnIdx),
 								column.SearchInfo_!.FunOverride!(item)
 							)
 						))
-						.Prepend(JsonUtils.KeyVal(
+						.Prepend(TableJsonUtils.KeyVal(
 							"id",
 							itemIdx
 						))
@@ -63,6 +60,7 @@ static class TableLogic
 					{
 						field = ColumnFieldName(columnIdx),
 						title = column.Title,
+						width = column.Width_,
 						hozAlign = column.Align_.SerEnum(),
 						formatter = column.Fmt_,
 					},
@@ -75,7 +73,7 @@ static class TableLogic
 					}
 				))
 				.ToJsonArray(),
-		}.ToJsonObject();
+		}.ToJsonObjectGen();
 
 		// Pagination
 		// ----------
@@ -93,7 +91,7 @@ static class TableLogic
 				pagination = false,
 			},
 		})
-		.ToJsonObject();
+		.ToJsonObjectGen();
 
 		// Selection
 		// ---------
@@ -107,7 +105,7 @@ static class TableLogic
 			{
 			},
 		})
-		.ToJsonObject();
+		.ToJsonObjectGen();
 
 		// Layout
 		// ------
@@ -116,7 +114,7 @@ static class TableLogic
 			height = opts.Height,
 			layout = opts.Layout.SerEnum(),
 		}
-		.ToJsonObject();
+		.ToJsonObjectGen();
 
 		// => Full Config
 		// --------------
@@ -125,11 +123,12 @@ static class TableLogic
 			new
 			{
 				data = jsonDataFun(Δitems.V),
-			}.ToJsonObject(),
+			}.ToJsonObjectGen(),
 			jsonColumns,
 			jsonPagination,
 			jsonSelection,
 			jsonLayout,
+			TableInit.jsonKeybindings,
 		}.Merge();
 
 
@@ -194,13 +193,13 @@ static class TableLogic
 					"width: 100%",
 				],
 			});
-			var jsSearchExpr = columns
-				.Where(column => column.SearchInfo_ != null)
-				.Select((column, columnIdx) =>
-					(column.SearchInfo_!.FunOverride != null) switch
+			var jsSearchExpr = columns.Index()
+				.Where(column => column.Item.SearchInfo_ != null)
+				.Select(column =>
+					(column.Item.SearchInfo_!.FunOverride != null) switch
 					{
-						false => ColumnFieldName(columnIdx),
-						true => ColumnSearchFieldName(columnIdx),
+						false => ColumnFieldName(column.Index),
+						true => ColumnSearchFieldName(column.Index),
 					}
 				)
 				.Select(e => $$"""${row.{{e}}}""")
@@ -354,120 +353,3 @@ static class TableLogic
 
 
 
-file static class JsonUtils
-{
-	public static JsonArray ToJsonArray(this IEnumerable<JsonObject> items) => new(items.OfType<JsonNode?>().ToArray());
-	public static JsonArray ToJsonArray<T>(this IEnumerable<T> items) => items.Ser().Deser<JsonArray>();
-
-	public static JsonObject ToJsonObject(this IEnumerable<KeyValuePair<string, JsonNode?>> items) => new(items.ToArray());
-	public static JsonObject ToJsonObject<T>(this T obj) => obj.Ser().Deser<JsonObject>();
-
-	public static JsonObject Merge(this IEnumerable<JsonObject> objs) =>
-		new(
-			from obj in objs
-			from kv in obj
-			select new KeyValuePair<string, JsonNode>(
-				kv.Key,
-				kv.Value.Ser().Deser<JsonNode>()
-			)
-		);
-
-	public static KeyValuePair<string, JsonNode?> KeyVal<T>(string key, T val) => new(
-		key,
-		JsonValue.Create(val)
-	);
-
-	public static string? SerEnum<E>(this E? val) where E : struct, Enum => val.HasValue switch
-	{
-		true => JsonEnumUtils.Ser(val.Value).RemoveEnclosingDoubleQuotes(),
-		false => null,
-	};
-
-	public static string Ser<T>(this T obj) => JsonSerializer.Serialize(obj, jsonOpt);
-	public static string SerFinal<T>(this T obj) => JsonSerializer.Serialize(obj, jsonOptFinal);
-	
-	static T Deser<T>(this string str) => JsonSerializer.Deserialize<T>(str, jsonOpt)!;
-
-
-
-	static string RemoveEnclosingDoubleQuotes(this string s)
-	{
-		if (s.Length < 2) return s;
-		if (s[0] == '"' && s[^1] == '"') return s[1..^1];
-		return s;
-	}
-
-
-	static readonly JsonSerializerOptions jsonOpt = new()
-	{
-		WriteIndented = true,
-		IndentCharacter = '\t',
-		IndentSize = 1,
-		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-	};
-
-	static readonly JsonSerializerOptions jsonOptFinal = new()
-	{
-		WriteIndented = true,
-		IndentCharacter = '\t',
-		IndentSize = 1,
-		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-		Converters =
-		{
-			new JsonObjectFormatterConverter(),
-		},
-	};
-
-
-
-
-	sealed class JsonObjectFormatterConverter : JsonConverter<JsonObject>
-	{
-		public override JsonObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			if (reader.TokenType != JsonTokenType.StartObject) throw new JsonException("Expected StartObject token");
-			if (JsonNode.Parse(ref reader) is not JsonObject jsonObject) throw new JsonException("Failed to deserialize JsonObject");
-			return jsonObject;
-		}
-
-		public override void Write(Utf8JsonWriter writer, JsonObject value, JsonSerializerOptions options)
-		{
-			writer.WriteStartObject();
-			foreach (var property in value)
-			{
-				writer.WritePropertyName(property.Key);
-
-				if (property is { Key: "formatter", Value: not null })
-				{
-					var str = property.Value.ToString();
-					writer.WriteRawValue(str, true);
-				}
-				else if (property.Value is JsonObject nestedObject)
-				{
-					JsonSerializer.Serialize(writer, nestedObject, options);
-				}
-				else if (property.Value is JsonArray nestedArray)
-				{
-					writer.WriteStartArray();
-					foreach (var item in nestedArray)
-					{
-						if (item is JsonObject arrayNestedObject)
-						{
-							JsonSerializer.Serialize(writer, arrayNestedObject, options);
-						}
-						else
-						{
-							JsonSerializer.Serialize(writer, item, options);
-						}
-					}
-					writer.WriteEndArray();
-				}
-				else
-				{
-					JsonSerializer.Serialize(writer, property.Value, options);
-				}
-			}
-			writer.WriteEndObject();
-		}
-	}
-}

@@ -41,11 +41,69 @@ public static class Frame
 		data
 	);
 
+
+
+	public static Frame<N, K1> MakeAligned<N, K1>(
+		N name,
+		Serie<K1>[] series
+	)
+	{
+		var xss = series.SelectA(e => new SortedSet<DateTime>(e.Index));
+		var align = DateAligner.Align(xss);
+		var index = align.Keys.ToArray();
+
+		return new Frame<N, K1>(
+			name,
+			index,
+			series.SelectA(e => e.Align(align))
+		);
+	}
+
+	public static Frame<N, K1, K2> MakeAligned<N, K1, K2>(
+		N name,
+		Frame<K1, K2>[] frames
+	)
+	{
+		var xss = frames.SelectManyA(e => e.Select(f => new SortedSet<DateTime>(f.Index)));
+		var align = DateAligner.Align(xss);
+		var index = align.Keys.ToArray();
+
+		return new Frame<N, K1, K2>(
+			name,
+			index,
+			frames.SelectA(e => (
+				e.Name,
+				e.Align(align)
+			))
+		);
+	}
+
+
 	public static void Dbg_SetFramePrinterCutoffs(int rowMax, int rowSmp, int colMax, int colSmp) => (FramePrinter.RowMax, FramePrinter.RowSmp, FramePrinter.ColMax, FramePrinter.ColSmp) = (rowMax, rowSmp, colMax, colSmp);
 
 	internal static Func<object, object>? RendererSerie;
 	internal static Func<object, object>? RendererFrame;
 	internal static Func<object, object>? RendererFrame2;
+
+
+
+
+	static (K1, double[]) Align<K1>(this Serie<K1> serie, IReadOnlyDictionary<DateTime, int> align)
+	{
+		var arr = new double[align.Count];
+		Array.Fill(arr, double.NaN);
+		for (var i = 0; i < serie.RowCount; i++)
+		{
+			var date = serie.Index[i];
+			var idx = align[date];
+			arr[idx] = serie.Values[i];
+		}
+		return (serie.Name, arr);
+	}
+
+	static (K2, double[])[] Align<K1, K2>(this Frame<K1, K2> frame, IReadOnlyDictionary<DateTime, int> align) =>
+		frame.SelectA(e => e.Align(align));
+
 }
 
 

@@ -38,7 +38,7 @@ static class SuspiciousSplitFinder
 {
 	public static SuspiciousSplit[] FindSuspiciousSplits(this Price price)
 	{
-		price = price.Adjust();
+		price = price.Adjust(true, true);
 
 		var (priceRStdDev, priceRAvg) = price.CalcPriceRStdDevAndAvg();
 		if (double.IsNaN(priceRStdDev)) return Array.Empty<SuspiciousSplit>();

@@ -5,7 +5,8 @@ namespace Feed.Universe._sys;
 
 static class TwelveDataSymbolsGetter
 {
-	public static string? ApiKey { get; set; }
+	public static string? apiKey { get; set; }
+	static string ApiKey => apiKey ?? throw new ArgumentException("Set TwelveData API key first using Feed.Universe.API.SetTwelveDataApiKey(string apiKey)");
 
 	public static TwelveDataSymbol[] All => all.Value;
 
@@ -23,7 +24,7 @@ static class TwelveDataSymbolsGetter
 		{
 			DefaultRequestHeaders =
 			{
-				{ "Authorization", $"apikey {ApiKey ?? throw new ArgumentException("Set TwelveData API key first using Feed.Universe.API.SetTwelveDataApiKey(string apiKey)")}" },
+				{ "Authorization", $"apikey {ApiKey}" },
 			},
 		};
 		using var response = client.GetAsync(Url).Result;
@@ -31,8 +32,7 @@ static class TwelveDataSymbolsGetter
 		var text = response.Content.ReadAsStringAsync().Result;
 
 		var data = JsonTwelveData.Deser<DataFile>(text).Data
-			.Clean()
-			.EnsureUniqueBy(e => e.Key, "TwelveDataSymbols should be unique by (Symbol,Exchange,Country)");
+			.CleanTwelveDataSymbols();
 
 		JsonSave.Save(Consts.TwelveDataSymbols.SymbolsFile, data);
 		Consts.TwelveDataSymbols.FetchLimiter.ConfirmFetchDone();
@@ -42,24 +42,6 @@ static class TwelveDataSymbolsGetter
 	// This ensures that TwelveDataSymbol.Symbol are unique
 	// and that Name normalization doesn't introduce duplicates
 
-	static readonly HashSet<TwelveDataSymbolKey> forbiddenKeys =
-	[
-		new TwelveDataSymbolKey("ZG", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("BATRK", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("KELYB", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("UONEK", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("LBTYB", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("LBTYA", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("NWS", "NASDAQ", "United States"),
-		new TwelveDataSymbolKey("BIO.B", "NYSE", "United States"),
-		new TwelveDataSymbolKey("HVT.A", "NYSE", "United States"),
-		new TwelveDataSymbolKey("UHAL.B", "NYSE", "United States"),
-	];
-
-	static IEnumerable<TwelveDataSymbol> Clean(this IEnumerable<TwelveDataSymbol> source) =>
-		source
-			.Where(e => !(e.Symbol == "ARQQW" && e.FigiCode == ""))
-			.Where(e => !forbiddenKeys.Contains(e.Key));
 
 	// ReSharper disable ClassNeverInstantiated.Local
 	sealed record DataFile(TwelveDataSymbol[] Data);

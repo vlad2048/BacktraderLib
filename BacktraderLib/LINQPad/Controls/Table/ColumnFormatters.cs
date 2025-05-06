@@ -10,13 +10,13 @@ public static class ColumnFormatters
 		function(cell) {
 			let v = cell.getValue();
 			let sym = '';
-			if (v >= 1_000_000_000) {
+			if (Math.abs(v) >= 1_000_000_000) {
 			    v /= 1_000_000_000;
 			    sym = ' B';
-			} else if (v >= 1_000_000) {
+			} else if (Math.abs(v) >= 1_000_000) {
 			    v /= 1_000_000;
 			    sym = ' M';
-			} else if (v >= 1_000) {
+			} else if (Math.abs(v) >= 1_000) {
 			    v /= 1_000;
 			    sym = ' K';
 			}

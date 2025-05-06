@@ -5,7 +5,7 @@ namespace BacktraderLib;
 
 public sealed record TableOptions<T>(
 	int? Width = null,
-	int Height = 300,
+	int? Height = 300,
 	TableLayout? Layout = null,
 	int? PageSize = null
 )

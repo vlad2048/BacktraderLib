@@ -1,59 +1,107 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Nodes;
+using BacktraderLib._sys.FrameRendering.Utils;
 using BacktraderLib._sys.Utils;
 using Frames;
 
 namespace BacktraderLib._sys.FrameRendering;
 
-
-file static class Consts
-{
-	public const int Width = 800;
-	public const int Height = 400;
-	public const TableLayout Layout = TableLayout.FitColumns;
-	public const int IndexWidth = 90;
-	public const int ColumnWidth = 80;
-}
-
-
 static class RendererFrame2
 {
+	static string ColName(int colIdx, int subColIdx) => $"c{colIdx}_{subColIdx}";
+
 	public static Tag Render<N, K1, K2>(Frame<N, K1, K2> df)
 	{
+		var fmts = (
+			from col in df.Index()
+			from subCol in col.Item.Index()
+			select new
+			{
+				col = col.Index,
+				subCol = subCol.Index,
+				fmt = SerieFmt.Make(subCol.Item.Values),
+			}
+		).ToDictionary(e => (e.col, e.subCol), e => e.fmt);
+
+		var jsonData = new
+			{
+				data = df.Index.Select((date, dateIdx) =>
+						(
+							from col in df.Index()
+							from subCol in col.Item.Index()
+							select TableJsonUtils.KeyVal(
+								ColName(col.Index, subCol.Index),
+								fmts[(col.Index, subCol.Index)].Format(subCol.Item.Values[dateIdx])
+							)
+						)
+						.Prepend(TableJsonUtils.KeyVal("date", $"{date:yyyy-MM-dd}"))
+						.Prepend(TableJsonUtils.KeyVal("id", dateIdx))
+						.ToJsonObject()
+					)
+					.ToJsonArray(),
+			}
+			.ToJsonObjectGen();
+
+		JsonArray jsonColumnsFun(Func<string, string, bool>? filter) =>
+			df.Select((col, colIdx) => new
+				{
+					title = $"{col.Name}",
+					columns = col.Select((subCol, subColIdx) => new
+						{
+							field = ColName(colIdx, subColIdx),
+							title = $"{subCol.Name}",
+							hozAlign = ColumnAlign.Right.SerEnum(),
+							headerSort = false,
+							resizable = false,
+							width = RendererConsts.ColumnWidth,
+							visible = filter == null || filter($"{col.Name}", $"{subCol.Name}"),
+					})
+						.ToJsonArray(),
+				})
+				.ToJsonArray();
+
+		var jsonLayout = new
+			{
+				height = RendererConsts.Height,
+				layout = TableLayout.FitColumns.SerEnum(),
+				rowHeader = new
+				{
+					field = "date",
+					rowHandle = false,
+					headerSort = false,
+					width = RendererConsts.IndexWidth,
+					resizable = false,
+				},
+			}
+			.ToJsonObjectGen();
+
+		var jsonConfig = new[]
+		{
+			jsonData,
+			new
+			{
+				columns = jsonColumnsFun(null),
+			}.ToJsonObjectGen(),
+			jsonLayout,
+		}.Merge();
+
+
 		var id = IdGen.Make();
 		var idSearch = $"{id}-search";
 
-		var js = JS.Fmt(
+		var jsInit = JS.Fmt(
 			"""
-			const table = new Tabulator(
+			new Tabulator(
 				elt,
-				{
-					height: ____0____,
-					layout: ____1____,
-					columns: ____2____,
-					data: ____3____,
-					rowHeader: {
-						field: 'date',
-						rowHandle: false,
-						headerSort: false,
-						width: ____4____,
-						resizable: false,
-					},
-				}
+				____0____
 			);
 			
-			document.getElementById(____9____).addEventListener('input', evt => { window.dispatch(____9____, {}); });
+			document.getElementById(____1____).addEventListener('input', evt => { window.dispatch(____1____, {}); });
 			""",
 			e => e
-				.JSRepl_Val(0, Consts.Height)
-				.JSRepl_Var(1, JsonEnumUtils.Ser(Consts.Layout))
-				.JSRepl_Obj(2, JsonUtils.GetColumnDefs(df, null))
-				.JSRepl_Obj(3, JsonUtils.GetData(df))
-				.JSRepl_Val(4, Consts.IndexWidth)
-
-				.JSRepl_Val(9, idSearch)
+				.JSRepl_Obj(0, jsonConfig.SerFinal())
+				.JSRepl_Val(1, idSearch)
 		);
+
 
 		Events.ListenFast(idSearch, () =>
 		{
@@ -69,19 +117,16 @@ static class RendererFrame2
 				""",
 				e => e
 					.JSRepl_Var(0, id)
-					.JSRepl_Obj(1, JsonUtils.GetColumnDefs(df, Filter))
+					.JSRepl_Obj(1, jsonColumnsFun(Filter).SerFinal())
 			);
 		});
 
-		var tag =
+
+		return
 			new Tag("div")
 			{
 				Class = CtrlsClasses.TableWrapper,
-				Style =
-				[
-					$"width: {Consts.Width}px",
-					"display: inline-block",
-				],
+				Style = FrameRenderingUtils.MakeRootStyle(RendererConsts.Frame2.Width),
 				Kids =
 				[
 					new Tag("div")
@@ -106,69 +151,9 @@ static class RendererFrame2
 
 					new Tag("div", id)
 					{
-						OnRenderJS = js,
+						OnRenderJS = jsInit,
 					},
-				],
+				]
 			};
-
-		return tag;
 	}
-}
-
-
-
-file static class JsonUtils
-{
-	static readonly JsonSerializerOptions jsonOpt = new()
-	{
-		WriteIndented = true,
-		IndentCharacter = '\t',
-		IndentSize = 1,
-		NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-	};
-
-
-
-	public static string GetColumnDefs<N, K1, K2>(Frame<N, K1, K2> df, Func<string, string, bool>? filter) => new JsonArray(
-		df
-			.Select(e => new JsonObject([
-				KeyVal("title", JsonValue.Create(e.Name)),
-				KeyVal("columns", new JsonArray(
-					e.Select(f => new JsonObject([
-							KeyVal("title", JsonValue.Create($"{f.Name}")),
-							KeyVal("field", JsonValue.Create($"{e.Name}_{f.Name}")),
-							KeyVal("headerSort", JsonValue.Create(false)),
-							KeyVal("visible", JsonValue.Create(filter == null || filter($"{e.Name}", $"{f.Name}"))),
-							KeyVal("resizable", JsonValue.Create(false)),
-							KeyVal("width", JsonValue.Create(Consts.ColumnWidth)),
-						]))
-						.Cast<JsonNode>()
-						.ToArray()
-				)),
-			]))
-			.Cast<JsonNode>()
-			.ToArray()
-	).Ser();
-
-
-
-	public static string GetData<N, K1, K2>(Frame<N, K1, K2> df) => new JsonArray(
-		df.Index.Index().Select(t => new JsonObject(
-				(
-					from e in df
-					from f in e
-					select KeyVal($"{e.Name}_{f.Name}", JsonValue.Create(f.Values[t.Index]))
-				)
-				.Prepend(KeyVal("date", JsonValue.Create($"{t.Item:yyyy-MM-dd}")))
-				.Prepend(KeyVal("id", JsonValue.Create(t.Index)))
-			))
-			.Cast<JsonNode>()
-			.ToArray()
-	).Ser();
-
-
-
-	static string Ser<T>(this T obj) => JsonSerializer.Serialize(obj, jsonOpt);
-
-	static KeyValuePair<string, JsonNode?> KeyVal(string key, JsonNode? val) => new(key, val);
 }

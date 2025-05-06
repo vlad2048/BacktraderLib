@@ -42,7 +42,6 @@ public static class UniverseConstituentCleaner
 		var countries = universe.GetCountries().ToHashSet();
 
 		var symsTwd = TwelveDataSymbolsGetter.All
-			.Where(e => e.Type == "Common Stock")
 			.Where(e => exchanges.Contains(e.Exchange))
 			.Where(e => countries.Contains(e.Country))
 			.ToDictionary(e => e.Symbol);

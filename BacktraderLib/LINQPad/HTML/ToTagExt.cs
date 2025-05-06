@@ -2,6 +2,8 @@
 using LINQPad.Controls;
 using LINQPad;
 using System.Reflection;
+using BacktraderLib._sys.FrameRendering;
+using Frames;
 using RxLib;
 
 namespace BacktraderLib;
@@ -16,6 +18,11 @@ public static class ToTagExt
 	}
 	public static Tag ToTag(this DumpContainer dc) => ToTagInner(dc.WrapInDiv());
 	public static Tag ToTag(this Control ctrl) => ToTagInner(ctrl);
+
+
+	public static Tag ToTag<N>(this Serie<N> df) => RendererSerie.Render(df);
+	public static Tag ToTag<N, K1>(this Frame<N, K1> df) => RendererFrame.Render(df);
+	public static Tag ToTag<N, K1, K2>(this Frame<N, K1, K2> df) => RendererFrame2.Render(df);
 
 
 

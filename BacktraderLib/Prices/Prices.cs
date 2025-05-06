@@ -1,5 +1,4 @@
 ﻿using BacktraderLib._sys;
-using BaseUtils;
 using Frames;
 
 namespace BacktraderLib;
@@ -7,6 +6,18 @@ namespace BacktraderLib;
 
 public static class Prices
 {
+	public static Serie<string> SaveSerie(this Serie<string> df, string file) => PriceSaver.SaveSerie(df, file);
+	public static Serie<string> LoadSerie(string file) => PriceLoader.LoadSerie(file);
+
+	public static Frame<string, string> SaveFrame(this Frame<string, string> df, string file) => PriceSaver.SaveFrame(df, file);
+	public static Frame<string, string> LoadFrame(string file) => PriceLoader.LoadFrame(file);
+
+	public static Frame<string, string, Bar> SaveFrame2(this Frame<string, string, Bar> df, string file) => PriceSaver.SaveFrame2(df, file);
+	public static Frame<string, string, Bar> LoadFrame2(string file) => PriceLoader.LoadFrame2(file);
+
+
+
+	/*
 	/// <summary>
 	/// Load prices from .csv files
 	/// </summary>
@@ -24,4 +35,5 @@ public static class Prices
 		PriceSaver.Save(prices, folder);
 		return prices;
 	}
+	*/
 }

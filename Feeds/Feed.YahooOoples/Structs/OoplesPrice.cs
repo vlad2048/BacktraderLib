@@ -13,6 +13,7 @@ public sealed record OoplesBar(
 	double High,
 	double Low,
 	double Close,
+	double AdjClose,
 	double Volume
 );
 

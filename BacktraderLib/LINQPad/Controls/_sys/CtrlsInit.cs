@@ -66,6 +66,7 @@ static class CtrlsInit
 			.horz-stretch {
 				display: flex;
 				align-items: stretch;
+				column-gap: 5px;
 			}
 			.horz-ctrlrow {
 				display: flex;
@@ -75,9 +76,10 @@ static class CtrlsInit
 			.vert {
 				display: flex;
 				flex-direction: column;
+				row-gap: 5px;
 			}
 			""");
-
+		
 
 		static void InputSelect() => CssUtils.AddStyles(
 			"""

@@ -80,12 +80,11 @@ static class StockAnalysisUniverseSymbolsGetter
 		var html = response.Content.ReadAsStringAsync().Result;
 		var doc = new HtmlDocument();
 		doc.LoadHtml(html);
-		var symbols = doc.DocumentNode.SelectNodes("//tr[@class = 'svelte-utsffj']")
-			.Where(e => e.SelectSingleNode("td[@class = 'sym svelte-utsffj']/a[contains(@href, '/stocks/')]") != null!)
+		var symbols = doc.DocumentNode.SelectNodes("//tbody/tr[starts-with(@class, 'svelte-')][//a[starts-with(@href, '/stocks/')]]")
 			.SelectA(e => new StockAnalysisSymbol(
-				e.SelectSingleNode("td[@class = 'sym svelte-utsffj']/a[contains(@href, '/stocks/')]").InnerText,
-				ParseValue(e.SelectSingleNode("td[@class = 'svelte-utsffj'][2]").InnerText),
-				ParseValue(e.SelectSingleNode("td[@class = 'tr svelte-utsffj']").InnerText)
+				e.SelectSingleNode(".//td/a[contains(@href, '/stocks/')]").InnerText,
+				ParseValue(e.SelectSingleNode(".//td[4]").InnerText),
+				ParseValue(e.SelectSingleNode(".//td[7]").InnerText)
 			));
 		return symbols;
 	}

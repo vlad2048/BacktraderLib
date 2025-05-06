@@ -8,6 +8,7 @@ sealed record RemoveBeforeIndexFilter(DateTime TMin, int TBuf) : IIndexFilter;
 sealed record AlignWithIndexFilter(DateTime[] Index) : IIndexFilter;
 sealed record RemoveDatesIndexFilter(DateTime[] Dates) : IIndexFilter;
 sealed record TruncateStartUntilNoNaNsIndexFilter : IIndexFilter;
+sealed record RemoveAllNaNsIndexFilter : IIndexFilter;
 
 public static class IndexFilter
 {
@@ -15,6 +16,7 @@ public static class IndexFilter
 	public static IIndexFilter AlignWith(DateTime[] Index) => new AlignWithIndexFilter(Index);
 	public static IIndexFilter RemoveDates(DateTime[] Dates) => new RemoveDatesIndexFilter(Dates);
 	public static readonly IIndexFilter TruncateStartUntilNoNaNs = new TruncateStartUntilNoNaNsIndexFilter();
+	public static readonly IIndexFilter RemoveAllNaNs = new RemoveAllNaNsIndexFilter();
 }
 
 public static partial class FrameUtils
@@ -79,6 +81,12 @@ public static partial class FrameUtils
 				return i => i >= idx;
 			}
 
+			case RemoveAllNaNsIndexFilter:
+			{
+				var valid = frame.Index.Index().Where(t => frame.All(f => !f.Values[t.Index].IsNaN())).ToHashSet(t => t.Index);
+				return valid.Contains;
+			}
+
 			default:
 				throw new ArgumentException("Unknown IndexFilter");
 		}
@@ -99,6 +107,12 @@ public static partial class FrameUtils
 				var idx = frame.Index.Index().FirstOrDefault(t => frame.All(f => f.All(g => !g.Values[t.Index].IsNaN())), (-1, default)).Index;
 				if (idx == -1) throw new ArgumentException("IndexFilter: there's NaNs until the end");
 				return i => i >= idx;
+			}
+
+			case RemoveAllNaNsIndexFilter:
+			{
+				var valid = frame.Index.Index().Where(t => frame.All(f => f.All(g => !g.Values[t.Index].IsNaN()))).ToHashSet(t => t.Index);
+				return valid.Contains;
 			}
 
 			default:

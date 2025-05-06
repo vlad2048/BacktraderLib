@@ -1,5 +1,4 @@
 ﻿using BaseUtils;
-using Feed.YahooOoples._sys.Errors;
 using OoplesFinance.YahooFinanceAPI;
 using OoplesFinance.YahooFinanceAPI.Enums;
 using OoplesFinance.YahooFinanceAPI.Models;
@@ -10,39 +9,81 @@ namespace Feed.YahooOoples._sys;
 
 static class PriceFetcher
 {
-	enum FetchStrat
+	public static OoplesPrice FetchPrice(this YahooClient client, string symbol)
 	{
-		/// <summary>
-		/// - Query only Close
-		/// - Unapply Splits from Close to get real Close to save
-		/// - Apply Splits + Dividends to Close to return AdjustedClose to the user
-		///
-		/// => Unfortunately this can cause some prices to become negative when reapplying all the adjustments
-		/// </summary>
-		UnapplySplits,
+		// @formatter:off
+		var data = client.GetAllHistoricalDataAsync(
+			symbol:					symbol,
+			dataFrequency:			DataFrequency.Daily,
+			startDate:				Consts.TimeStart,//.AddTicks(1),
+			endDate:				DateTime.Now.Date,
+			includeAdjustedClose:	true
+		).Result;
+		// @formatter:on
 
-		/// <summary>
-		/// - Query both Close and AdjustedClose
-		/// - The difference between them is the cumulative Dividend adjustments
-		/// - Apply this difference to Open, High and Low to adjust them
-		/// - Return this to the user
-		///
-		/// => Unfortunately with this method we never get the real Close price to serialize, so we need to query the whole date range every time
-		/// </summary>
-		CompareCloseAndCloseAdj,
+		return new OoplesPrice(
+			symbol,
+			data.ToBars(),
+			data.Dividends.SelectA(e => new OoplesDividend(
+				e.Date,
+				e.Amount ?? throw new ArgumentException("Dividend.Amount is null")
+			)),
+			data.Splits.SelectA(e => new OoplesSplit(
+				e.Date ?? throw new ArgumentException("Split.Date is null"),
+				e.Numerator ?? throw new ArgumentException("Split.Numerator is null"), e.Denominator ?? throw new ArgumentException("Split.Denominator is null")
+			))
+		);
 	}
 
-	const FetchStrat fetchStrat = FetchStrat.CompareCloseAndCloseAdj;
+
+	static OoplesBar[] ToBars(this HistoricalFullData data) =>
+		data.Prices.SelectA(e => new OoplesBar(
+			e.Date,
+			e.Open,
+			e.High,
+			e.Low,
+			e.Close,
+			e.AdjustedClose,
+			e.Volume
+		));
+}
+
+/*
+using BaseUtils;
+using Feed.YahooOoples._sys.Errors;
+using Feed.YahooOoples._sys.Structs;
+using OoplesFinance.YahooFinanceAPI;
+using OoplesFinance.YahooFinanceAPI.Enums;
+using OoplesFinance.YahooFinanceAPI.Models;
+
+namespace Feed.YahooOoples._sys;
 
 
 
+static class PriceFetcher
+{
 	public static OoplesPrice FetchPrice(this YahooClient client, string symbol) =>
-		fetchStrat switch
+		Consts.FetchStrat switch
 		{
+			FetchStrat.None => client.FetchPrice_None(symbol),
 			FetchStrat.UnapplySplits => client.FetchPrice_UnapplySplits(symbol),
 			FetchStrat.CompareCloseAndCloseAdj => client.FetchPrice_CompareCloseAndCloseAdj(symbol),
 			_ => throw new NotImplementedException(),
 		};
+
+
+
+	static OoplesPrice FetchPrice_None(this YahooClient client, string symbol)
+	{
+		var data = client.GetAllHistoricalDataAsync(symbol, DataFrequency.Daily, Consts.TimeStart, DateTime.Now.Date, false).Result;
+		var price = new OoplesPrice(
+			symbol,
+			data.ToBars_UnapplySplits(),
+			data.Dividends.SelectA(e => new OoplesDividend(e.Date, e.Amount ?? throw new ArgumentException("Dividend.Amount is null"))),
+			data.Splits.SelectA(e => new OoplesSplit(e.Date ?? throw new ArgumentException("Split.Date is null"), e.Numerator ?? throw new ArgumentException("Split.Numerator is null"), e.Denominator ?? throw new ArgumentException("Split.Denominator is null")))
+		);
+		return price.UnapplySplits();
+	}
 
 
 
@@ -324,3 +365,4 @@ static class PriceFetcher
 		return priceSrc with { Bars = barsDst };
 	}
 }
+*/

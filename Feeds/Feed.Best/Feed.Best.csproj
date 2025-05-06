@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Feed.SEC\Feed.SEC.csproj" />
+    <ProjectReference Include="..\Feed.Trading212\Feed.Trading212.csproj" />
+    <ProjectReference Include="..\Feed.TwelveData\Feed.TwelveData.csproj" />
+    <ProjectReference Include="..\Feed.Universe\Feed.Universe.csproj" />
+    <ProjectReference Include="..\Feed.YahooOoples\Feed.YahooOoples.csproj" />
+  </ItemGroup>
+
+</Project>

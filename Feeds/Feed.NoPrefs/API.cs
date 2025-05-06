@@ -9,9 +9,9 @@ namespace Feed.NoPrefs;
 
 public static class API
 {
-	public static Frame<string, string, Bar> Fetch(string[] syms) =>
+	public static Frame<string, string, Bar> Fetch(string[] syms, bool adjustDividends = true, bool adjustSplits = true) =>
 		PriceBuilder.Build(
-			syms.SelectA(e => (e, FetchRaw(e).Adjust().Bars)),
+			syms.SelectA(e => (e, FetchRaw(e).Adjust(adjustDividends, adjustSplits).Bars)),
 			e => e.Date,
 			e => (double)e.Open,
 			e => (double)e.High,

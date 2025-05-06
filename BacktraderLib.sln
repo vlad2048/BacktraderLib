@@ -66,6 +66,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxLib", "Base\RxLib\RxLib.c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Feed.Universe", "Feeds\Feed.Universe\Feed.Universe.csproj", "{DC22F4A7-ADCE-4E95-A8F4-09FFBFF89ADD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Feed.Best", "Feeds\Feed.Best\Feed.Best.csproj", "{1D972DAA-49D9-4524-96BD-77D551EA20DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,6 +158,10 @@ Global
 		{DC22F4A7-ADCE-4E95-A8F4-09FFBFF89ADD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC22F4A7-ADCE-4E95-A8F4-09FFBFF89ADD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC22F4A7-ADCE-4E95-A8F4-09FFBFF89ADD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D972DAA-49D9-4524-96BD-77D551EA20DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D972DAA-49D9-4524-96BD-77D551EA20DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D972DAA-49D9-4524-96BD-77D551EA20DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D972DAA-49D9-4524-96BD-77D551EA20DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -182,6 +188,7 @@ Global
 		{266B60D0-1436-4B2D-AA53-0AAF3F5A4D62} = {BD544332-FD7D-4F2F-ADCE-B96F4291A567}
 		{EE1E6CB2-5CF7-4CFA-AA3F-B6686FAD0B2B} = {0946170A-7178-4B9B-A594-6903E642943F}
 		{DC22F4A7-ADCE-4E95-A8F4-09FFBFF89ADD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1D972DAA-49D9-4524-96BD-77D551EA20DB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7A8AEEE-1DC4-48AB-B408-B585C3FA091C}
