@@ -1,4 +1,5 @@
-﻿using LINQPad;
+﻿using BacktraderLib.Utils;
+using LINQPad;
 
 namespace BacktraderLib._sys.Slider;
 

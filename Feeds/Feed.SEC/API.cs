@@ -10,6 +10,15 @@ namespace Feed.SEC;
 
 public static class API
 {
+	static string? rootFolder { get; set; }
+	internal static string RootFolder => rootFolder ?? throw new ArgumentException("Call Feed.SEC.API.Init() first");
+
+
+
+	public static void Init(string rootFolder_) => rootFolder = rootFolder_;
+
+
+
 	public static class Fetcher
 	{
 		public static void Run(Step step = Step.All)
@@ -17,7 +26,6 @@ public static class API
 			if (step.HasFlag(Step.Download)) _1_Download.Run();
 			if (step.HasFlag(Step.Clean)) _2_Clean.Run();
 			if (step.HasFlag(Step.Group)) _3_Group.Run();
-			if (step.HasFlag(Step.Rename)) _4_NameChangeCompiler.Run();
 			Console.WriteLine();
 			Console.WriteLine("FINISHED");
 		}
@@ -29,6 +37,8 @@ public static class API
 
 	public static class Utils
 	{
+		public static string GroupQuartersDoneFile => Consts.Group.QuartersDoneFile;
+		public static string[] GetGroupCompanyFiles => Consts.Group.GetAllCompanyZipFiles();
 		public static string[] GetCompanies() => Consts.Group.GetAllCompanies();
 		public static NameChangeInfos GetNameChanges() => JsonUtils.Load<NameChangeInfos>(Consts.Rename.DataFile);
 		public static IReadOnlyDictionary<Quarter, DateOnly> MapQuartersToFiledDates(string company, Quarter[] quarters) => FiledDateMapper.Map(company, quarters);

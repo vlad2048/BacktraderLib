@@ -61,12 +61,12 @@ public class Tag
 						}
 						""",
 						e => e
-								.JSRepl_Obj(0, mutator.JSCode)
+							.JSRepl_Obj(0, mutator.JSCode)
 					);
 				}).D(D);
 		return this;
 	}
-			
+
 
 
 
@@ -139,7 +139,7 @@ public class Tag
 		if (Kids.Length > 0 && text != null) throw new ArgumentException("Cannot use both Kids and text");
 		return Util.RawHtml($"{this}");
 	}
-
+	
 
 	public override string ToString()
 	{

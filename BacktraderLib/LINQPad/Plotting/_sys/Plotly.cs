@@ -51,7 +51,8 @@ static class Plotly
 
 		return js;
 	}
-	
+
+	static string JSRepl_ArrOfObj<T>(this string c, int i, T[] xs) => c.JSRepl_Obj(i, xs.PlotlySer());
 
 
 

@@ -76,7 +76,7 @@ static class CtrlsInit
 			.vert {
 				display: flex;
 				flex-direction: column;
-				row-gap: 5px;
+				row-gap: 30px;
 			}
 			""");
 		

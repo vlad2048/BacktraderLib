@@ -9,8 +9,6 @@
     <None Remove="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.css" />
     <None Remove="LINQPad\Controls\_sys\Slider\ion.rangeSlider.min.js" />
     <None Remove="LINQPad\Controls\_sys\Slider\jquery.min.js" />
-    <None Remove="LINQPad\Controls\_sys\Tabulator\tabulator.min.js" />
-    <None Remove="LINQPad\Controls\_sys\Tabulator\tabulator_site_dark.min.css" />
     <None Remove="LINQPad\Plotting\_sys\Themes\dark.json" />
   </ItemGroup>
 
@@ -20,8 +18,6 @@
     <EmbeddedResource Include="LINQPad\Controls\_sys\JQuery\jquery.min.js" />
     <EmbeddedResource Include="LINQPad\Controls\Table\_sys\tabulator.min.js" />
     <EmbeddedResource Include="LINQPad\Controls\Table\_sys\tabulator_site_dark.min.css" />
-    <EmbeddedResource Include="LINQPad\Controls\_sys\Tabulator\tabulator.min.js" />
-    <EmbeddedResource Include="LINQPad\Controls\_sys\Tabulator\tabulator_site_dark.min.css" />
     <EmbeddedResource Include="LINQPad\Plotting\_sys\Themes\dark.json" />
   </ItemGroup>
 
@@ -34,10 +30,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Base\FeedUtils\FeedUtils.csproj" />
     <ProjectReference Include="..\Base\ScrapeUtils\ScrapeUtils.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="LINQPad\Controls\_sys\Table\" />
   </ItemGroup>
 
 </Project>

@@ -13,6 +13,19 @@ public static class CtrlsExt
 			],
 		};
 
+	public static Tag WithHeader(this Tag tag, string label) =>
+		new("div")
+		{
+			Class = "heaadingpresenter",
+			Kids =
+			[
+				new Tag("h1", null, label)
+				{
+					Class = "headingpresenter",
+				},
+				tag,
+			],
+		};
 
 	public static (IRoVar<T>, Tag) WithLabel<T>(this (IRoVar<T>, Tag) t, string label) =>
 	(

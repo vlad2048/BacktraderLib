@@ -8,14 +8,22 @@ namespace BacktraderLib._sys;
 
 static class TableLogic
 {
+	const int DbgItemCount = 3;
+
+
 	public static Tag Make<T>(
 		IRoVar<T[]> Δitems,
-		TableOptions<T> opts,
+		TableOptions<T>? opts,
 		Action<int>? onSelect
 	)
 	{
 		if (onSelect != null && Δitems.V.Length == 0) throw new ArgumentException("Empty array not supported for a TableSelector");
+		opts ??= new TableOptions<T>();
 		var columns = opts.Columns ?? ColumnGuesser.Guess<T>();
+		var id = IdGen.Make();
+
+		var enableCellCopy = onSelect == null;
+		var displayRowCount = true;
 
 
 		// *********************
@@ -28,20 +36,19 @@ static class TableLogic
 		// ----
 		JsonArray jsonDataFun(T[] items) =>
 			items
+				.TakeDbg(opts.Dbg_)
 				.Select((item, itemIdx) =>
 					columns
-						.SelectMany((column, columnIdx) => DuoIf(
-							TableJsonUtils.KeyVal(
-								ColumnFieldName(columnIdx),
-								column.Fun(item)
-									.FormatEnums()
-							),
-							column.SearchInfo_?.FunOverride != null,
-							() => TableJsonUtils.KeyVal(
-								ColumnSearchFieldName(columnIdx),
-								column.SearchInfo_!.FunOverride!(item)
-							)
+						.Select((column, columnIdx) => TableJsonUtils.KeyVal(
+							ColumnFieldName(columnIdx),
+							column.Fun(item)
+								.FormatEnums()
 						))
+						.Concat(opts.SearchFields.Select((searchField, searchFieldIdx) => TableJsonUtils.KeyVal(
+							SearchFieldName(searchFieldIdx),
+							searchField.Fun(item)
+								.FormatEnums()
+						)))
 						.Prepend(TableJsonUtils.KeyVal(
 							"id",
 							itemIdx
@@ -55,20 +62,22 @@ static class TableLogic
 		var jsonColumns = new
 		{
 			columns = columns
-				.SelectMany((column, columnIdx) => DuoIf<object>(
-					new
+				.Select((column, columnIdx) =>
+					(object)new
 					{
 						field = ColumnFieldName(columnIdx),
 						title = column.Title,
 						width = column.Width_,
 						hozAlign = column.Align_.SerEnum(),
 						formatter = column.Fmt_,
-					},
-					column.SearchInfo_?.FunOverride != null,
-					() => new
+						visible = !column.Hide_,
+					}
+				)
+				.Concat(opts.SearchFields.Select((_, searchFieldIdx) =>
+					new
 					{
-						field = ColumnSearchFieldName(columnIdx),
-						title = ColumnSearchFieldName(columnIdx),
+						field = SearchFieldName(searchFieldIdx),
+						title = SearchFieldName(searchFieldIdx),
 						visible = false,
 					}
 				))
@@ -95,16 +104,35 @@ static class TableLogic
 
 		// Selection
 		// ---------
-		var jsonSelection = (onSelect switch
-		{
-			not null => (object)new
-			{
-				selectableRows = 1,
-			},
-			null => new
-			{
-			},
-		})
+		var jsonSelection = (
+				(onSelect, enableCellCopy) switch
+				{
+					(_, true) => (object)new
+					{
+						selectableRange = 1,
+						selectableRangeColumns = true,
+						selectableRangeRows = true,
+						selectableRangeClearCells = true,
+						clipboard = true,
+						clipboardCopyStyled = false,
+						clipboardCopyConfig = new
+						{
+							rowHeaders = false,
+							columnHeaders = false,
+						},
+						clipboardCopyRowRange = "range",
+						clipboardPasteParser = "range",
+						clipboardPasteAction = "range",
+					},
+					(not null, false) => new
+					{
+						selectableRows = 1,
+					},
+					(null, false) => new
+					{
+					},
+				}
+		)
 		.ToJsonObjectGen();
 
 		// Layout
@@ -138,8 +166,6 @@ static class TableLogic
 		// **** JS Init ****
 		// *****************
 		// *****************
-		var id = IdGen.Make();
-
 		var jsInitTable = JS.Fmt(
 			"""
 			const table = new Tabulator(
@@ -175,61 +201,75 @@ static class TableLogic
 		// **** Search Bar ****
 		// ********************
 		// ********************
-		var searchBarCtrls = new List<Tag>();
-		var jsInitTextBox = "";
+		var jsInitSearch = "";
 
-		if (columns.Any(e => e.SearchInfo_ != null))
-		{
-			var idTextBox = $"{id}-search";
-			searchBarCtrls.Add(new Tag("input", idTextBox)
+		if (opts.SearchFields.Any())
+			jsInitSearch =
+				JS.Fmt(
+					"""
+					const elts = ____0____.map(e => document.getElementById(e));
+
+					function search() {
+						const chop = str => str.toLowerCase().split(' ').map(e => e.trim()).filter(e => e !== '');
+						const xss = elts.map(elt => chop(elt.value));
+						table.setFilter(
+							(row, filterParams) => {
+								const { xss } = filterParams;
+								let result = true;
+								for (var i = 0; i < ____1____; i++) {
+									const str = row[`s${i}`].toLowerCase();
+									const xs = xss[i];
+									result &= xs.every(part => str.includes(part));
+								}
+								return result;
+							},
+							{
+								xss,
+							},
+						);
+					}
+
+					elts.forEach(elt => elt.addEventListener('keyup', _ => search()));
+					""",
+					e => e
+						.JSRepl_Arr(0, opts.SearchFields.SelectA((_, searchFieldIdx) => SearchId(id, searchFieldIdx)))
+						.JSRepl_Val(1, opts.SearchFields.Length)
+				);
+
+		var searchBarCtrls = opts.SearchFields
+			.Select((searchField, searchFieldIdx) => new Tag("input", SearchId(id, searchFieldIdx))
 			{
 				Attributes =
 				{
 					{ "type", "text" },
-					{ "placeholder", "Search" },
+					{ "placeholder", searchField.Name },
 				},
 				Style =
 				[
 					"width: 100%",
 				],
-			});
-			var jsSearchExpr = columns.Index()
-				.Where(column => column.Item.SearchInfo_ != null)
-				.Select(column =>
-					(column.Item.SearchInfo_!.FunOverride != null) switch
-					{
-						false => ColumnFieldName(column.Index),
-						true => ColumnSearchFieldName(column.Index),
-					}
-				)
-				.Select(e => $$"""${row.{{e}}}""")
-				.JoinText(" ");
-			jsInitTextBox = JS.Fmt(
-				"""
-				
-				document.getElementById(____0____).addEventListener('keyup', evt => {
-					const parts = evt.target.value.toLowerCase().split(' ').map(e => e.trim()).filter(e => e !== '');
-					table.setFilter(
-						(row, filterParams) => {
-							const { parts } = filterParams;
-							const str = `____1____`.toLowerCase();
-							const result = parts.every(part => str.includes(part));
-							return result;
-						},
-						{
-							parts,
-						},
-					);
-				});
-				""",
-				e => e
-					.JSRepl_Val(0, idTextBox)
-					.JSRepl_Var(1, jsSearchExpr)
-			);
-		}
+			})
+			.ToList();
 
 		searchBarCtrls = [..opts.ExtraCtrlsPrepend, ..searchBarCtrls, ..opts.ExtraCtrlsAppend];
 
+		if (displayRowCount)
+			searchBarCtrls = [new Tag("span", RowCountId(id)), ..searchBarCtrls];
+
+		var jsInitDisplayRowCount = displayRowCount switch
+		{
+			false => "",
+			true => JS.Fmt(
+				"""
+				
+				table.on("dataFiltered", function (filters, rows) {
+					document.getElementById(____0____).innerText = `rows:${rows.length}`;
+				});
+				""",
+				e => e
+					.JSRepl_Val(0, RowCountId(id))
+			),
+		};
 
 
 		// *******************
@@ -240,7 +280,8 @@ static class TableLogic
 		var finalJS =
 			jsInitTable +
 			jsInitSelection +
-			jsInitTextBox;
+			jsInitSearch +
+			jsInitDisplayRowCount;
 
 		if (opts.Dbg_)
 			Util.SyntaxColorText(finalJS, SyntaxLanguageStyle.JavaScript).Dump();
@@ -338,15 +379,15 @@ static class TableLogic
 
 
 	static string ColumnFieldName(int columnIdx) => $"c{columnIdx}";
-	static string ColumnSearchFieldName(int columnIdx) => $"s{columnIdx}";
+	static string SearchFieldName(int columnIdx) => $"s{columnIdx}";
+	static string SearchId(string tableId, int columnIdx) => $"{tableId}-s{columnIdx}";
+	static string RowCountId(string tableId) => $"{tableId}-rowcount";
 
-
-	static T[] DuoIf<T>(T first, bool condition, Func<T> second) =>
-		condition switch
-		{
-			false => [first],
-			true => [first, second()],
-		};
+	static T[] TakeDbg<T>(this T[] xs, bool dbg) => dbg switch
+	{
+		false => xs,
+		true => xs.Take(DbgItemCount).ToArray(),
+	};
 }
 
 

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Feeds\Feed.SEC\Feed.SEC.csproj" />
+    <ProjectReference Include="..\..\FeedsOld\Feed.SEC\Feed.SEC.csproj" />
   </ItemGroup>
 
 </Project>

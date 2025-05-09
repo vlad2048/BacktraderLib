@@ -7,6 +7,13 @@ namespace BacktraderLib._sys.Utils;
 
 static class TableJsonUtils
 {
+	static readonly HashSet<string> rawFieldNames =
+	[
+		"formatter",
+		"dataFiltered",
+		"dataLoaded",
+	];
+
 	public static JsonArray ToJsonArray(this IEnumerable<JsonObject> items) => new(items.OfType<JsonNode?>().ToArray());
 	public static JsonArray ToJsonArray<T>(this IEnumerable<T> items) => items.Ser().Deser<JsonArray>();
 
@@ -88,34 +95,36 @@ static class TableJsonUtils
 			{
 				writer.WritePropertyName(property.Key);
 
-				if (property is { Key: "formatter", Value: not null })
+				switch (property)
 				{
-					var str = property.Value.ToString();
-					writer.WriteRawValue(str, true);
-				}
-				else if (property.Value is JsonObject nestedObject)
-				{
-					JsonSerializer.Serialize(writer, nestedObject, options);
-				}
-				else if (property.Value is JsonArray nestedArray)
-				{
-					writer.WriteStartArray();
-					foreach (var item in nestedArray)
-					{
-						if (item is JsonObject arrayNestedObject)
+					case { Value: not null, Key: var key } when rawFieldNames.Contains(key):
+						var str = property.Value.ToString();
+						writer.WriteRawValue(str, true);
+						break;
+
+					case { Value: JsonObject nestedObject }:
+						JsonSerializer.Serialize(writer, nestedObject, options);
+						break;
+
+					case { Value: JsonArray nestedArray }:
+						writer.WriteStartArray();
+						foreach (var item in nestedArray)
 						{
-							JsonSerializer.Serialize(writer, arrayNestedObject, options);
+							if (item is JsonObject arrayNestedObject)
+							{
+								JsonSerializer.Serialize(writer, arrayNestedObject, options);
+							}
+							else
+							{
+								JsonSerializer.Serialize(writer, item, options);
+							}
 						}
-						else
-						{
-							JsonSerializer.Serialize(writer, item, options);
-						}
-					}
-					writer.WriteEndArray();
-				}
-				else
-				{
-					JsonSerializer.Serialize(writer, property.Value, options);
+						writer.WriteEndArray();
+						break;
+
+					default:
+						JsonSerializer.Serialize(writer, property.Value, options);
+						break;
 				}
 			}
 			writer.WriteEndObject();

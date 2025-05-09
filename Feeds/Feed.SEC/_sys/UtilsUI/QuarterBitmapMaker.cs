@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿/*
+using System.Drawing;
 using BaseUtils;
 
 namespace Feed.SEC._sys.UtilsUI;
@@ -58,3 +59,4 @@ static class QuarterBitmapMaker
 		}
 	);
 }
+*/

@@ -5,8 +5,4 @@
     <TargetFramework>net9.0-windows</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Feeds\Feed.SEC\Feed.SEC.csproj" />
-  </ItemGroup>
-
 </Project>

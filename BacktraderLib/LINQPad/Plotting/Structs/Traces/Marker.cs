@@ -4,7 +4,7 @@ namespace BacktraderLib;
 
 public sealed record Marker
 {
-	public Symbol? Symbol { get; init; }
+	public PlotSymbol? Symbol { get; init; }
 	public double? Size { get; init; }
 	public Color? Color { get; init; }
 	public MarkerLine? Line { get; init; }
@@ -18,7 +18,7 @@ public sealed record MarkerLine
 
 
 [PlotlyEnum(EnumStyle.DashSeparated)]
-public enum Symbol
+public enum PlotSymbol
 {
 	Circle,
 	Square,
@@ -36,7 +36,7 @@ public enum Symbol
 }
 
 
-//Symbol
+//PlotSymbol
 //enumerated:
 //| Base number | Symbol name               | +100  | -open modification        | +200  | -dot modification         | +300  | -open-dot modification
 //|=============|===========================|=======|===========================|=======|===========================|=======|============================

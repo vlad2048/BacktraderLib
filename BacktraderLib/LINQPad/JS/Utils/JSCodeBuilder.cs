@@ -11,6 +11,7 @@ public static class JSCodeBuilder
 	public static string JSRepl_Var(this string c, int i, string x) => c.Repl(i, x);
 	public static string JSRepl_Arr(this string c, int i, int[] xs) => c.Repl(i, xs.FmtArr());
 	public static string JSRepl_Arr(this string c, int i, double[] xs) => c.Repl(i, xs.FmtArr());
+	public static string JSRepl_Arr(this string c, int i, string[] xs) => c.Repl(i, xs.FmtArr(Quote));
 	public static string JSRepl_Arr(this string c, int i, DateTime[] xs) => c.Repl(i, xs.FmtArr(e => $"{e:yyyy-MM-dd}".Quote()));
 	public static string JSRepl_Val(this string c, int i, string? x) => c.Repl(i, x != null ? x.Quote() : "null");
 	public static string JSRepl_Val(this string c, int i, bool x) => c.Repl(i, $"{x}".ToLowerInvariant());
@@ -22,8 +23,6 @@ public static class JSCodeBuilder
 		while (JSRepl_Obj_Once(ref c, i, x)) ;
 		return c;
 	}
-
-	public static string JSRepl_ArrOfObj<T>(this string c, int i, T[] xs) => c.JSRepl_Obj(i, xs.PlotlySer());
 
 
 

@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using BacktraderLib._sys.Utils;
-using BacktraderLib.Structs;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 

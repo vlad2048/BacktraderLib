@@ -14,15 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Feeds\Feed.SEC\Feed.SEC.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Utils\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\FeedsOld\Feed.SEC\Feed.SEC.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,7 +5,7 @@ public static class OrderTracer
 	public static ScatterTrace ToBuyMarkersTrace(this OrderUpdate[] orders, DateTime[] index) => orders.ToOrderMarkersTrace(
 		index,
 		OrderDir.Buy,
-		Symbol.TriangleUp,
+		PlotSymbol.TriangleUp,
 		Colors.Green,
 		"Buy"
 	);
@@ -13,12 +13,12 @@ public static class OrderTracer
 	public static ScatterTrace ToSellMarkersTrace(this OrderUpdate[] orders, DateTime[] index) => orders.ToOrderMarkersTrace(
 		index,
 		OrderDir.Sell,
-		Symbol.TriangleDown,
+		PlotSymbol.TriangleDown,
 		Colors.Red,
 		"Sell"
 	);
 
-	static ScatterTrace ToOrderMarkersTrace(this OrderUpdate[] orders, DateTime[] index, OrderDir dir, Symbol symbol, Color color, string name)
+	static ScatterTrace ToOrderMarkersTrace(this OrderUpdate[] orders, DateTime[] index, OrderDir dir, PlotSymbol symbol, Color color, string name)
 	{
 		var xs = orders
 			.FilterFills()

@@ -2,10 +2,14 @@
 
 static class CellFormattingUtils
 {
-	public static object FormatEnums(this object obj) =>
-		obj.GetType().IsEnum switch
+	public static object? FormatEnums(this object obj) =>
+		obj switch
 		{
-			true => $"{obj}",
-			_ => obj,
+			null => null,
+			_ => obj.GetType().IsEnum switch
+			{
+				true => $"{obj}",
+				_ => obj,
+			},
 		};
 }

@@ -1,4 +1,4 @@
-﻿namespace BacktraderLib.Structs;
+﻿namespace BacktraderLib;
 
 public enum JSErrorType
 {
